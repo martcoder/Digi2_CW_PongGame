@@ -58,7 +58,7 @@ int left_wall_reached()
 
 int P1_racket_hit() //check ball vs left racket
 {
- if( (yBall <= (yR1 + HALF_RACKET_SIZE)) && (yBall >= (yR1 - HALF_RACKET_SIZE)) )
+ if( (yBall <= (yR1 + HALF_RACKET_SIZE)) && (yBall >= (yR1 - HALF_RACKET_SIZE)) && (xBall < BALL_RADIUS) )
      return 1;
  else
      return 0;
@@ -83,28 +83,35 @@ void ball_update(void)
 
   case MOVING: //moving in free space
 
+          xBall = xBall + x_displacement;
+          yBall = yBall + y_displacement;
 
-
-         /* if(top_wall_reached())
+          if(top_wall_reached()){
               y_displacement = +1;
 
-          if(bottom_wall_reached())
+          }
+
+          if(bottom_wall_reached()){
               y_displacement = -1;
-*/
+
+          }
+
           //check right wall bounce
           if(right_wall_reached()){
               x_displacement = -1;  //Right wall is here, bounce to direction 8
+
           }
-          /*
+
           if(P1_racket_hit()){
               x_displacement = +1;
-          }*/
-/*
-          if(left_wall_reached())
-              ballStateInstance = SCORING;*/
 
-          xBall = xBall + x_displacement;
-          yBall = yBall + y_displacement;
+          }
+/*
+          if(left_wall_reached()){
+              ballStateInstance = SCORING;
+
+          }*/
+
 
           break;
   case SCORING: //stopped

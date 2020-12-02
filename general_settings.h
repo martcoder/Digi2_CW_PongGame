@@ -32,6 +32,7 @@ volatile enum gameState gameStateInstance;
 
 //Ball handling
 enum ballState {STARTING,MOVING,SCORING};
+enum ballTransform {LEFTEDGE,RIGHTEDGE,TOPEDGE,BOTTOMEDGE,RACKETEDGE};
 volatile enum ballState ballStateInstance; //Current ball state
 volatile int xBall, yBall; //Current ball position
 volatile int xBall_old, yBall_old; //For ball trail position
