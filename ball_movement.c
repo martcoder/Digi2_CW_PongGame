@@ -88,29 +88,30 @@ void ball_update(void)
 
           if(top_wall_reached()){
               y_displacement = +1;
-
           }
 
           if(bottom_wall_reached()){
               y_displacement = -1;
-
           }
 
           //check right wall bounce
           if(right_wall_reached()){
               x_displacement = -1;  //Right wall is here, bounce to direction 8
-
           }
 
           if(P1_racket_hit()){
               x_displacement = +1;
-
+              if(yR1_old == yR1) // racket not moving
+                  y_displacement = 0;
+              if(yR1_old < yR1) // racket is moving down
+                  y_displacement = +1; // move ball downward too
+              if(yR1_old > yR1) // racket is moving up
+                  y_displacement = -1; // move ball upward too
           }
 
           if(left_wall_reached()){
               ballStateInstance = SCORING;
           }
-
 
           break;
   case SCORING:

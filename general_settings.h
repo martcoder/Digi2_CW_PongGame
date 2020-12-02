@@ -29,10 +29,8 @@ enum gameState {BEGINNING,INPLAY,SCORED,END};
 volatile enum gameState gameStateInstance;
 
 
-
 //Ball handling
 enum ballState {STARTING,MOVING,SCORING};
-enum ballTransform {LEFTEDGE,RIGHTEDGE,TOPEDGE,BOTTOMEDGE,RACKETEDGE};
 volatile enum ballState ballStateInstance; //Current ball state
 volatile int xBall, yBall; //Current ball position
 volatile int xBall_old, yBall_old; //For ball trail position
@@ -40,11 +38,13 @@ volatile int xBall_old2, yBall_old2; //To delete old ball position
 volatile int x_displacement;
 volatile int y_displacement;
 
+
 //Racket handling
 enum VDir {STOP, UP, DOWN}; //last racket movement vertical directions
 //Racket1's variables
 volatile int xR1, yR1; //Current racket 1 position
 volatile int xR1_old, yR1_old; //To delete old racket position
+// NB yR1_old will also be used to check if racket position is different from old Position, and thereby determining if it is moving up or down, or not moving
 volatile enum VDir R1Dir; //last movement direction for racket 1 (used for ball control)
 
 #endif /* GENERAL_SETTINGS_H_ */
