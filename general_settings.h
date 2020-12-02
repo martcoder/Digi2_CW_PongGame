@@ -11,7 +11,7 @@
 #define LCD_BACKLIGHT_LEVEL 5 //0 to 16
 #define LCD_CONTRAST_LEVEL 90 //70 to 127
 
-#define HALF_RACKET_SIZE 10 //racket width in pixels
+#define HALF_RACKET_SIZE 16 //racket width in pixels
 #define BALL_RADIUS 1 //ball radius in pixels
 
 //Timing intervals for the game
