@@ -11,7 +11,6 @@
 //******************************************************************************	
 
 #include    "msp430f5438a.h"
-//#include    "flash.h"
 #include	"hal_UCS.h"
 #include 	"hal_PMM.h"
 #include    "hal_lcd.h"
@@ -118,6 +117,14 @@ void GameStartInit()
  xR1_old = xR1;
  yR1_old = yR1;
 
+ //Draw new racket1
+  halLcdVLine(xR1, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
+  halLcdVLine(xR1 + 1, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
+  halLcdVLine(xR1 + 2, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
+  halLcdVLine(xR1 + 3, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
+  yR1_old = yR1;
+  xR1_old = xR1;
+
  //Initial state of the ball
  ballStateInstance = STARTING;
 
@@ -129,31 +136,36 @@ void UserInputs_update(void)
  R1Dir = STOP;
  //EXAMPLE: read button SW1
 
-
  //Check individual flags to find out if each direction was activated
   if(!(P2IN & BIT5)){ //DOWN pressed
 
         if (yR1 < (LCD_ROW - HALF_RACKET_SIZE) ) //avoid overwriting top wall
         {
-           yR1 += 2; //move racket 2 pixels down
+           yR1_previousPosition = yR1;
+           yR1 += 1; //move racket 1 pixels down
         }
         R1Dir = DOWN;
+        return;
   }
   if(!(P2IN & BIT4)){ //UP pressed
       if (yR1 > HALF_RACKET_SIZE) //avoid overwriting top wall
         {
-           yR1 -= 2; //move racket 2 pixel up
+           yR1_previousPosition = yR1;
+           yR1 -= 1; //move racket 1 pixel up
         }
         R1Dir = UP;
+        return;
   }
 
  if(!(P2IN & BIT6)) //SW1 pressed for UP
  {
         if (yR1 > HALF_RACKET_SIZE) //avoid overwriting top wall
         {
-           yR1 -= 2; //move racket 2 pixels up
+           yR1_previousPosition = yR1;
+           yR1 -= 1; //move racket 1 pixels up
         }
         R1Dir = UP;
+        return;
  }
 
 }
@@ -161,34 +173,40 @@ void UserInputs_update(void)
 //Update drawings in LCD screen (CPU is awaken by TimerA1 interval ints)
 void LCD_update(void)
 {
- //update older positions to clear old racket and draw new one
- //clear old racket1
- halLcdVLine(xR1_old, yR1_old - HALF_RACKET_SIZE, yR1_old + HALF_RACKET_SIZE, PIXEL_OFF);
- halLcdVLine(xR1_old + 1, yR1_old - HALF_RACKET_SIZE, yR1_old + HALF_RACKET_SIZE, PIXEL_OFF);
- halLcdVLine(xR1_old + 2, yR1_old - HALF_RACKET_SIZE, yR1_old + HALF_RACKET_SIZE, PIXEL_OFF);
- halLcdVLine(xR1_old + 3, yR1_old - HALF_RACKET_SIZE, yR1_old + HALF_RACKET_SIZE, PIXEL_OFF);
- //Draw new racket1
- halLcdVLine(xR1, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
- halLcdVLine(xR1 + 1, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
- halLcdVLine(xR1 + 2, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
- halLcdVLine(xR1 + 3, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
- yR1_old = yR1;
- xR1_old = xR1;
+     //update older positions to clear old racket and draw new one
 
- //Clear oldest ball
- halLcdCircle(xBall_old2, yBall_old2, BALL_RADIUS, PIXEL_OFF);
- halLcdPixel(xBall_old2, yBall_old2, PIXEL_OFF);
- //Draw ball trail
- halLcdCircle(xBall_old, yBall_old, BALL_RADIUS, PIXEL_ON);
- halLcdPixel(xBall_old, yBall_old, PIXEL_ON);
- //Draw new ball
- halLcdCircle(xBall, yBall, BALL_RADIUS, PIXEL_ON);
- halLcdPixel(xBall, yBall, PIXEL_ON);
- //update older positions for drawing ball trail and deleting old ball
- xBall_old2=xBall_old;
- yBall_old2=yBall_old;
- xBall_old=xBall;
- yBall_old=yBall;
+     if(R1Dir == UP){
+        //clear old racket1
+        halLcdHLine(xR1_old, xR1_old+4, yR1_previousPosition + HALF_RACKET_SIZE, PIXEL_OFF);
+        // draw new line on racket
+        halLcdHLine(xR1, xR1+4, yR1 - HALF_RACKET_SIZE, PIXEL_ON);
+     }
+     if(R1Dir == DOWN){
+        //clear old racket1
+        halLcdHLine(xR1_old, xR1_old+4, yR1_previousPosition - HALF_RACKET_SIZE, PIXEL_OFF);
+        // draw new line on racket
+        halLcdHLine(xR1, xR1+4, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
+      }
+
+     xR1_old = xR1;
+     yR1_old = yR1;
+
+     //Clear oldest ball
+     halLcdCircle(xBall_old2, yBall_old2, BALL_RADIUS, PIXEL_OFF);
+     halLcdPixel(xBall_old2, yBall_old2, PIXEL_OFF);
+
+     //Draw ball trail
+     halLcdCircle(xBall_old, yBall_old, BALL_RADIUS, PIXEL_ON);
+     halLcdPixel(xBall_old, yBall_old, PIXEL_ON);
+
+     //Draw new ball
+     halLcdCircle(xBall, yBall, BALL_RADIUS, PIXEL_ON);
+     halLcdPixel(xBall, yBall, PIXEL_ON);
+     //update older positions for drawing ball trail and deleting old ball
+     xBall_old2=xBall_old;
+     yBall_old2=yBall_old;
+     xBall_old=xBall;
+     yBall_old=yBall;
 
 }
 

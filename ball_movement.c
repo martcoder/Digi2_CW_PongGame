@@ -58,7 +58,7 @@ int left_wall_reached()
 
 int P1_racket_hit() //check ball vs left racket
 {
- if( (yBall <= (yR1 + HALF_RACKET_SIZE)) && (yBall >= (yR1 - HALF_RACKET_SIZE)) && (xBall <= BALL_RADIUS+1) )
+ if( (yBall <= (yR1 + HALF_RACKET_SIZE)) && (yBall >= (yR1 - HALF_RACKET_SIZE)) && (xBall <= BALL_RADIUS+4) )
      return 1;
  else
      return 0;
