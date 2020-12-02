@@ -11,7 +11,7 @@
 #define LCD_BACKLIGHT_LEVEL 5 //0 to 16
 #define LCD_CONTRAST_LEVEL 90 //70 to 127
 
-#define HALF_RACKET_SIZE 5 //racket width in pixels
+#define HALF_RACKET_SIZE 10 //racket width in pixels
 #define BALL_RADIUS 1 //ball radius in pixels
 
 //Timing intervals for the game
@@ -28,7 +28,6 @@ volatile unsigned int LCDUpdatePending;
 enum gameState {BEGINNING,INPLAY,SCORED,END};
 volatile enum gameState gameStateInstance;
 
-
 //Ball handling
 enum ballState {STARTING,MOVING,SCORING};
 volatile enum ballState ballStateInstance; //Current ball state
@@ -37,7 +36,6 @@ volatile int xBall_old, yBall_old; //For ball trail position
 volatile int xBall_old2, yBall_old2; //To delete old ball position
 volatile int x_displacement;
 volatile int y_displacement;
-
 
 //Racket handling
 enum VDir {STOP, UP, DOWN}; //last racket movement vertical directions
