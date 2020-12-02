@@ -64,6 +64,7 @@ int P1_racket_hit() //check ball vs left racket
      return 0;
 }
 
+
 //Update the state and position of the ball
 //(CPU is awaken by TimerA1 interval ints)
 void ball_update(void)
@@ -116,64 +117,23 @@ void ball_update(void)
           break;
   case SCORING:
 
-      //A very simplistic game end handling
-          halLcdClearScreen(); //CLEAR SCREEN
-          halLcdPrintLine("     GOAL", 4, OVERWRITE_TEXT);//PRINT MESSAGE
-          halLcdPrintLine(" Reset to start", 6, OVERWRITE_TEXT);//PRINT MESSAGE
-          //stop TimerA1. This prevents new LCD and ball updates
-          //but user input is operational because is driven by TimerB0
-          TA1CTL= TA1CTL & ~(BIT5 + BIT4); //MC=00 (bits 5,4) 0b11001111
-
-          /*xBall = xBall + 2;
-          yBall = yBall - 1;
-
-          // check if left wall hit
-          if(left_wall_reached())
-
-
-          //check right wall bounce
-          if(right_wall_reached())
-              x_displacement = -1;  //Right wall is here, bounce to direction 8
-
-          // check paddle hit
-          if()
-
-          xBall = xBall - 2;
-          //check left wall reached
-          if(left_wall_reached())
-          {
-            //If racket is here bounce, otherwise it's a goal
-            if(P1_racket_hit())
-            {
-               if(R1Dir == UP) //up effect on ball
-               { ballState = 2; }
-               else
-               {
-                   if(R1Dir == DOWN) //down effect on ball
-                    {   ballState = 14; }
-                   else //no effect, normal bounce
-                    {   ballState = 1; }
-               }
-            }
-            else //Goal! Player 1 missed the ball
-             { ballState = 16; }
-          }
-          break;*/
-
-          break;
-  case 15://Right-hand player missed the ball!
-
-          break;
-  case 16://Left-hand player missed the ball!
           //A very simplistic game end handling
           halLcdClearScreen(); //CLEAR SCREEN
-          halLcdPrintLine("     GOAL", 4, OVERWRITE_TEXT);//PRINT MESSAGE
-          halLcdPrintLine(" Reset to start", 6, OVERWRITE_TEXT);//PRINT MESSAGE
+          halLcdPrintLine("     GOAL", 4, OVERWRITE_TEXT);//PRINT MESSAGE ......... NB ADD SCORES TO THE SCREEN
+          halLcdPrintLine(" Reset to start", 6, OVERWRITE_TEXT);//PRINT MESSAGE ..... NB CHANGE THIS TO PRESS A BUTTON TO RESTART, ALTERNATIVELY A TIMEOUT WILL RESTART TOO
           //stop TimerA1. This prevents new LCD and ball updates
           //but user input is operational because is driven by TimerB0
           TA1CTL= TA1CTL & ~(BIT5 + BIT4); //MC=00 (bits 5,4) 0b11001111
-          break;
- }
 
+          /*MIGHT WANT TO THINK ABOUT HAVING A TIMEOUT BEFORE IT CONTINUES BY ITSELF BACK TO START*/
+          /*
+           * START TIMER AND GO INTO LPM
+           *
+           * CREATE TIMEOUT ISR WHICH SETS STATE TO STARTING
+           *
+           * */
+
+         break;
+ }
 
 }

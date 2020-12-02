@@ -41,6 +41,7 @@ void main(void)
   
   WDTCTL = WDTPW+WDTHOLD; // Stop WDT
   
+
   // Initialize board
   halBoardInit();  
 
@@ -127,13 +128,32 @@ void UserInputs_update(void)
 {
  R1Dir = STOP;
  //EXAMPLE: read button SW1
- if(!(P2IN & BIT6)) //SW1 pressed
- {
-  if (yR1 > HALF_RACKET_SIZE) //avoid overwriting top wall
-  {
-   yR1--; //move racket 1 pixel up
+
+
+ //Check individual flags to find out if each direction was activated
+  if(!(P2IN & BIT5)){ //DOWN pressed
+
+        if (yR1 < (LCD_ROW - HALF_RACKET_SIZE) ) //avoid overwriting top wall
+        {
+           yR1 += 2; //move racket 2 pixels down
+        }
+        R1Dir = DOWN;
   }
-  R1Dir = UP;
+  if(!(P2IN & BIT4)){ //UP pressed
+      if (yR1 > HALF_RACKET_SIZE) //avoid overwriting top wall
+        {
+           yR1 -= 2; //move racket 2 pixel up
+        }
+        R1Dir = UP;
+  }
+
+ if(!(P2IN & BIT6)) //SW1 pressed for UP
+ {
+        if (yR1 > HALF_RACKET_SIZE) //avoid overwriting top wall
+        {
+           yR1 -= 2; //move racket 2 pixels up
+        }
+        R1Dir = UP;
  }
 
 }
@@ -198,6 +218,12 @@ void halBoardInit(void)
   P2DIR &= ~BIT6; //pin 6 input
   P2REN = P2REN | BIT6; //pin 6 internal pull R enabled
   P2OUT = P2OUT | BIT6; //pin 6 pull-down
+
+  //configure JOYSTICK DOWN (P2.5) and UP (P2.4)
+  P2SEL = P2SEL & ~(BIT5 + BIT4); //GPIO
+  P2DIR = P2DIR & ~(BIT5 + BIT4); //input
+  P2REN = P2REN | (BIT5 + BIT4);  //internal resistor enabled
+  P2OUT = P2OUT | (BIT5 + BIT4);  //pull down, so pressing it makes it HIGH
 }
 
 //NOTE: TimerA0 is initialized inside hal_lcd.c because it's already used for the LCD backlight PWM
@@ -278,3 +304,4 @@ __interrupt void TIMER0_B1_ISR(void)
             break;
   }
 }
+
