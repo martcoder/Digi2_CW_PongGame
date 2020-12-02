@@ -15,6 +15,7 @@ ORDERED_OBJS += \
 "./hal_lcd.obj" \
 "./hal_lcd_fonts.obj" \
 "./hal_pmm.obj" \
+"./lookup.obj" \
 "./pong.obj" \
 "../lnk_msp430f5438a.cmd" \
 $(GEN_CMDS__FLAG) \
@@ -160,8 +161,8 @@ Digi2_CW_PongGame.hex: $(EXE_OUTPUTS)
 # Other Targets
 clean:
 	-$(RM) $(BIN_OUTPUTS__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "ball_movement.obj" "hal_UCS.obj" "hal_lcd.obj" "hal_lcd_fonts.obj" "hal_pmm.obj" "pong.obj" 
-	-$(RM) "ball_movement.d" "hal_UCS.d" "hal_lcd.d" "hal_lcd_fonts.d" "hal_pmm.d" "pong.d" 
+	-$(RM) "ball_movement.obj" "hal_UCS.obj" "hal_lcd.obj" "hal_lcd_fonts.obj" "hal_pmm.obj" "lookup.obj" "pong.obj" 
+	-$(RM) "ball_movement.d" "hal_UCS.d" "hal_lcd.d" "hal_lcd_fonts.d" "hal_pmm.d" "lookup.d" "pong.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

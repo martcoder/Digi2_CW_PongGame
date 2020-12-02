@@ -12,12 +12,25 @@
 #include "general_settings.h"
 #include "hal_lcd.h"
 #include "msp430f5438a.h"
+#include "lookup.c"
+
+
 
 int top_wall_reached()
 {
-    if(yBall <= BALL_RADIUS) //up wall rached
+    if(yBall <= (BALL_RADIUS) ) //top wall reached
     {
         yBall = 1+BALL_RADIUS; //do not overwrite the wall
+        return 1;
+    }
+    else return 0;
+}
+
+int bottom_wall_reached()
+{
+    if(yBall >= (LCD_ROW-BALL_RADIUS)) //up wall reached
+    {
+        yBall = LCD_ROW-BALL_RADIUS; //do not overwrite the wall
         return 1;
     }
     else return 0;
@@ -27,7 +40,7 @@ int right_wall_reached()
 {
     if(xBall >= LCD_COL-1-BALL_RADIUS) //right wall reached
     {
-        xBall = LCD_COL-2-BALL_RADIUS; //do not overwrite right wall/racket
+        //xBall = LCD_COL-2-BALL_RADIUS; //do not overwrite right wall/racket
         return 1;
     }
     else return 0; //right wall not reached
@@ -55,51 +68,60 @@ int P1_racket_hit() //check ball vs left racket
 //(CPU is awaken by TimerA1 interval ints)
 void ball_update(void)
 {
+
+
  //calculate new position and bouncing
- switch(ballState)
+ switch(ballStateInstance)
  {
-  case 0: //"Start" state, init ball position
+  case STARTING: //"Start" state, init ball position
           yBall = LCD_ROW >> 1;
           xBall = LCD_COL >> 1;
-          xBall_old2 = xBall;
-          yBall_old2 = yBall;
-          xBall_old = xBall;
-          yBall_old = yBall;
-          //choose next state to start ball movement
-          ballState = 1;
+          x_displacement = +1;
+          y_displacement = 0;
+          ballStateInstance = MOVING; // begin moving
           break;
-  case 1: //move Right
-          xBall = xBall + 2;
+
+  case MOVING: //moving in free space
+
+
+
+         /* if(top_wall_reached())
+              y_displacement = +1;
+
+          if(bottom_wall_reached())
+              y_displacement = -1;
+*/
+          //check right wall bounce
+          if(right_wall_reached()){
+              x_displacement = -1;  //Right wall is here, bounce to direction 8
+          }
+          /*
+          if(P1_racket_hit()){
+              x_displacement = +1;
+          }*/
+/*
+          if(left_wall_reached())
+              ballStateInstance = SCORING;*/
+
+          xBall = xBall + x_displacement;
+          yBall = yBall + y_displacement;
+
+          break;
+  case SCORING: //stopped
+          /*xBall = xBall + 2;
+          yBall = yBall - 1;
+
+          // check if left wall hit
+          if(left_wall_reached())
+
+
           //check right wall bounce
           if(right_wall_reached())
-              ballState = 8;  //Right wall is here, bounce to direction 8
-          break;
-  case 2: //move Right and a bit Up
-          xBall = xBall + 2;
-          yBall = yBall - 1;
-          //Check top wall bounce
-          if(top_wall_reached())
-              ballState = 14; //Top wall hit, bounce to 14
-          //check right wall bounce
-          else if(right_wall_reached())
-              ballState = 8;  //Right wall is here, bounce to direction 8
-          break;
-  case 3: //move
+              x_displacement = -1;  //Right wall is here, bounce to direction 8
 
-          break;
-  case 4: //move
+          // check paddle hit
+          if()
 
-          break;
-  case 5: //move
-
-          break;
-  case 6: //move
-
-          break;
-  case 7: //move
-
-          break;
-  case 8: //move Left
           xBall = xBall - 2;
           //check left wall reached
           if(left_wall_reached())
@@ -120,23 +142,7 @@ void ball_update(void)
             else //Goal! Player 1 missed the ball
              { ballState = 16; }
           }
-          break;
-  case 9: //move
-
-          break;
-  case 10://move
-
-          break;
-  case 11://move
-
-          break;
-  case 12://move
-
-          break;
-  case 13://move
-
-          break;
-  case 14://move
+          break;*/
 
           break;
   case 15://Right-hand player missed the ball!
@@ -152,4 +158,6 @@ void ball_update(void)
           TA1CTL= TA1CTL & ~(BIT5 + BIT4); //MC=00 (bits 5,4) 0b11001111
           break;
  }
+
+
 }

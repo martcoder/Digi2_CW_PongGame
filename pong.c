@@ -9,12 +9,16 @@
 //  GCU
 //  November 2017
 //******************************************************************************	
+
 #include    "msp430f5438a.h"
+//#include    "flash.h"
 #include	"hal_UCS.h"
 #include 	"hal_PMM.h"
 #include    "hal_lcd.h"
 #include    "general_settings.h"
 #include    "ball_movement.h"
+
+
 
 /* 5xx functions / variables */ 
 void halBoardInit(void);
@@ -28,6 +32,7 @@ void LCD_update(void);
 volatile unsigned int LCD_intervals = 0; //count number of base intervals elapsed
 volatile unsigned int Ball_intervals = 0; //count number of base intervals elapsed
 //volatile =  compiler will not optimize these variables
+
 
 //main function
 void main(void)
@@ -99,18 +104,21 @@ void GameStartInit()
  InputUpdatePending = 0;
  BallUpdatePending = 0;
  LCDUpdatePending = 0;
- ballState = 0; //initial ball state
 
  //Draw top, right and bottom walls
  halLcdLine(0,0, LCD_COL-1,0, PIXEL_ON);
  halLcdLine(LCD_COL-1,0, LCD_COL-1,LCD_ROW-1, PIXEL_ON);
  halLcdLine(0,LCD_ROW-1, LCD_COL-1,LCD_ROW-1, PIXEL_ON);
 
+
  //Initial position of racket 1
  xR1 = 0; //left-hand side
  yR1 = LCD_ROW >> 1; //middle row
  xR1_old = xR1;
  yR1_old = yR1;
+
+ //Initial state of the ball
+ ballStateInstance = STARTING;
 
 }
 

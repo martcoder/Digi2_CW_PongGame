@@ -14,6 +14,7 @@ C_SRCS += \
 ../hal_lcd.c \
 ../hal_lcd_fonts.c \
 ../hal_pmm.c \
+../lookup.c \
 ../pong.c 
 
 C_DEPS += \
@@ -22,6 +23,7 @@ C_DEPS += \
 ./hal_lcd.d \
 ./hal_lcd_fonts.d \
 ./hal_pmm.d \
+./lookup.d \
 ./pong.d 
 
 OBJS += \
@@ -30,6 +32,7 @@ OBJS += \
 ./hal_lcd.obj \
 ./hal_lcd_fonts.obj \
 ./hal_pmm.obj \
+./lookup.obj \
 ./pong.obj 
 
 OBJS__QUOTED += \
@@ -38,6 +41,7 @@ OBJS__QUOTED += \
 "hal_lcd.obj" \
 "hal_lcd_fonts.obj" \
 "hal_pmm.obj" \
+"lookup.obj" \
 "pong.obj" 
 
 C_DEPS__QUOTED += \
@@ -46,6 +50,7 @@ C_DEPS__QUOTED += \
 "hal_lcd.d" \
 "hal_lcd_fonts.d" \
 "hal_pmm.d" \
+"lookup.d" \
 "pong.d" 
 
 C_SRCS__QUOTED += \
@@ -54,6 +59,7 @@ C_SRCS__QUOTED += \
 "../hal_lcd.c" \
 "../hal_lcd_fonts.c" \
 "../hal_pmm.c" \
+"../lookup.c" \
 "../pong.c" 
 
 
