@@ -50,7 +50,7 @@ int left_wall_reached()
 {
     if(xBall <= BALL_RADIUS)  //left wall reached
     {
-        xBall = 1+BALL_RADIUS; //do not overwrite wall/racket1
+        xBall <= BALL_RADIUS; //do not overwrite wall/racket1
         return 1;
     }
     else return 0; //right wall not reached
@@ -58,7 +58,7 @@ int left_wall_reached()
 
 int P1_racket_hit() //check ball vs left racket
 {
- if( (yBall <= (yR1 + HALF_RACKET_SIZE)) && (yBall >= (yR1 - HALF_RACKET_SIZE)) && (xBall < BALL_RADIUS) )
+ if( (yBall <= (yR1 + HALF_RACKET_SIZE)) && (yBall >= (yR1 - HALF_RACKET_SIZE)) && (xBall <= BALL_RADIUS+1) )
      return 1;
  else
      return 0;
@@ -106,15 +106,23 @@ void ball_update(void)
               x_displacement = +1;
 
           }
-/*
+
           if(left_wall_reached()){
               ballStateInstance = SCORING;
-
-          }*/
+          }
 
 
           break;
-  case SCORING: //stopped
+  case SCORING:
+
+      //A very simplistic game end handling
+          halLcdClearScreen(); //CLEAR SCREEN
+          halLcdPrintLine("     GOAL", 4, OVERWRITE_TEXT);//PRINT MESSAGE
+          halLcdPrintLine(" Reset to start", 6, OVERWRITE_TEXT);//PRINT MESSAGE
+          //stop TimerA1. This prevents new LCD and ball updates
+          //but user input is operational because is driven by TimerB0
+          TA1CTL= TA1CTL & ~(BIT5 + BIT4); //MC=00 (bits 5,4) 0b11001111
+
           /*xBall = xBall + 2;
           yBall = yBall - 1;
 
