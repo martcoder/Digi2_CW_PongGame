@@ -5,6 +5,11 @@
  *      Author: M Mata
  */
 
+#ifndef STDIO_H
+#define STDIO_H
+#include <stdio.h>
+#endif
+
 #ifndef GENERAL_SETTINGS_H_
 #define GENERAL_SETTINGS_H_
 
@@ -40,11 +45,21 @@ volatile int y_displacement;
 
 //Racket handling
 enum VDir {STOP, UP, DOWN}; //last racket movement vertical directions
+
 //Racket1's variables
-volatile int xR1, yR1; //Current racket 1 position
-volatile int xR1_old, yR1_old; //To delete old racket position
-volatile int yR1_previousPosition; // For if yR1_old gets overwritten with yR1 by racket staying still, but there is still a previous position
+volatile int xR1, yR1, xR2, yR2; //Current racket 1 and racket 2 positions
+volatile int xR1_old, yR1_old, xR2_old, yR2_old; //To delete old racket position
+volatile int yR1_previousPosition, yR2_previousPosition; // For if yR1_old gets overwritten with yR1 by racket staying still, but there is still a previous position
 // NB yR1_old will also be used to check if racket position is different from old Position, and thereby determining if it is moving up or down, or not moving
 volatile enum VDir R1Dir; //last movement direction for racket 1 (used for ball control)
+volatile enum VDir R2Dir; //last movement direction for racket 2 (used for ball control)
+
+//Score handling
+enum PlayerScorer {PLAYER1,PLAYER2};
+volatile int p1Score,p2Score;
+volatile char scoreString[14];
+volatile char currentScoresString[15];
+
+volatile enum PlayerScorer Scorer;
 
 #endif /* GENERAL_SETTINGS_H_ */

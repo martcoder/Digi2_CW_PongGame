@@ -8,6 +8,9 @@
 #ifndef BALL_MOVEMENT_H_
 #define BALL_MOVEMENT_H_
 
+
+void updateScoreString(volatile char* scoreString, int scorer);
+void updateCurrentScoresString(volatile char* currentScoresString, int p1score, int p2score);
 void ball_update(void);
 
 #endif /* BALL_MOVEMENT_H_ */

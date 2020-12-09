@@ -69,11 +69,21 @@ void main(void)
 
     //CPU CONTINUES HERE WHEN IT IS AWAKEN AT THE END OF TimerA1 ISR
 
+    /* If input vector has been triggered then that ISR sets InputUpdatePending,
+     *
+     * Also want to update positions if an input is being continuously pressed.
+     * The input interrupt will not register if an input is continuously pressed,
+     * only the first time it was pressed, due to triggering on an edge.
+     * So this needs to be handled, and it is done in code by setting a var to check
+     * for continuous pressing after an input interrupt has happened. The var is set
+     * in the UserInputs_update function, e.g. if input currently high, then check it
+     * again next time round
+     */
     if(InputUpdatePending || ContinuousPressChecker)
     {
-         InputUpdatePending=0;
-         ContinuousPressChecker = 0;
-         UserInputs_update();
+         InputUpdatePending=0; // clear var
+         ContinuousPressChecker = 0; // clear var
+         UserInputs_update(); // update positions if inputs are currently pressed, also set ContinuousPressChecker if they are
     }
 
     if(BallUpdatePending)
@@ -113,20 +123,32 @@ void GameStartInit()
  halLcdLine(LCD_COL-1,0, LCD_COL-1,LCD_ROW-1, PIXEL_ON);
  halLcdLine(0,LCD_ROW-1, LCD_COL-1,LCD_ROW-1, PIXEL_ON);
 
-
  //Initial position of racket 1
  xR1 = 0; //left-hand side
  yR1 = LCD_ROW >> 1; //middle row
  xR1_old = xR1;
  yR1_old = yR1;
 
+ //Initial position of racket 2
+ xR2 = LCD_COL - 1; //right-hand side
+ yR2 = LCD_ROW >> 1; //middle row
+ xR2_old = xR2;
+ yR2_old = yR2;
+
  //Draw new racket1
-  halLcdVLine(xR1, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
-  halLcdVLine(xR1 + 1, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
-  halLcdVLine(xR1 + 2, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
-  halLcdVLine(xR1 + 3, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
-  yR1_old = yR1;
-  xR1_old = xR1;
+ halLcdVLine(xR1, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
+ halLcdVLine(xR1 + 1, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
+ halLcdVLine(xR1 + 2, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
+
+ //Draw new racket2
+ halLcdVLine(xR2, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
+ halLcdVLine(xR2 - 1, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
+ halLcdVLine(xR2 - 2, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
+
+ yR1_old = yR1;
+ xR1_old = xR1;
+ yR2_old = yR2;
+ xR2_old = xR2;
 
  //Initial state of the ball
  ballStateInstance = STARTING;
@@ -139,10 +161,11 @@ void UserInputs_update(void)
 
     ContinuousPressChecker = 0;
     R1Dir = STOP;
+    R2Dir = STOP;
     //EXAMPLE: read button SW1
 
     //Check individual flags to find out if each direction was activated
-    if(!(P2IN & BIT5)){ //DOWN pressed
+    if(!(P2IN & BIT5)){ //DOWN pressed for Player1
         ContinuousPressChecker = 1; // Continue to check if this is continously held down
         if (yR1 < (LCD_ROW - HALF_RACKET_SIZE) ) //avoid overwriting top wall
         {
@@ -152,7 +175,7 @@ void UserInputs_update(void)
         R1Dir = DOWN;
         return;
     }
-    if(!(P2IN & BIT4)){ //UP pressed
+    if(!(P2IN & BIT4)){ //UP pressed for Player1
         ContinuousPressChecker = 1; // Continue to check if this is continously held down
         if (yR1 > HALF_RACKET_SIZE) //avoid overwriting top wall
         {
@@ -163,36 +186,64 @@ void UserInputs_update(void)
         return;
     }
 
-    if(!(P2IN & BIT6)) //SW1 pressed for UP
+    if(!(P2IN & BIT6)) //SW1 pressed for UP for Player2
     {
         ContinuousPressChecker = 1; // Continue to check if this is continously held down
-        if (yR1 > HALF_RACKET_SIZE) //avoid overwriting top wall
+        if (yR2 > HALF_RACKET_SIZE) //avoid overwriting top wall
         {
-           yR1_previousPosition = yR1;
-           yR1 -= 1; //move racket 1 pixels up
+           yR2_previousPosition = yR2;
+           yR2 -= 1; //move racket 1 pixels up
         }
-        R1Dir = UP;
+        R2Dir = UP;
         return;
     }
+
+    if(!(P2IN & BIT7)) //SW2 pressed for DOWN for Player2
+        {
+            ContinuousPressChecker = 1; // Continue to check if this is continously held down
+            if (yR2 < (LCD_ROW - HALF_RACKET_SIZE) ) //avoid overwriting top wall
+            {
+                yR2_previousPosition = yR2;
+                yR2 += 1; //move racket 1 pixels down
+            }
+            R2Dir = DOWN;
+            return;
+        }
 }
 
 //Update drawings in LCD screen (CPU is awaken by TimerA1 interval ints)
 void LCD_update(void)
 {
-     //update older positions to clear old racket and draw new one
+     /*update older positions to clear old rackets and draw new ones
+    * NB: this has been optimised to only draw the new top line and undraw the old bottom line for moving UP,
+    * and vice versa for moving DOWN, rather than undrawing then drawing the entire racket(s) again.
+    */
 
      if(R1Dir == UP){
-        //clear old racket1
-        halLcdHLine(xR1_old, xR1_old+4, yR1_previousPosition + HALF_RACKET_SIZE, PIXEL_OFF);
+        //clear old racket1 bottom line
+        halLcdHLine(xR1_old, xR1_old+3, yR1_previousPosition + HALF_RACKET_SIZE, PIXEL_OFF);
         // draw new line on racket
-        halLcdHLine(xR1, xR1+4, yR1 - HALF_RACKET_SIZE, PIXEL_ON);
+        halLcdHLine(xR1, xR1+3, yR1 - HALF_RACKET_SIZE, PIXEL_ON);
      }
      if(R1Dir == DOWN){
-        //clear old racket1
-        halLcdHLine(xR1_old, xR1_old+4, yR1_previousPosition - HALF_RACKET_SIZE, PIXEL_OFF);
+        //clear old racket1 top line
+        halLcdHLine(xR1_old, xR1_old+3, yR1_previousPosition - HALF_RACKET_SIZE, PIXEL_OFF);
         // draw new line on racket
-        halLcdHLine(xR1, xR1+4, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
+        halLcdHLine(xR1, xR1+3, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
       }
+
+     if(R2Dir == UP){
+             //clear old racket2 bottom line
+             halLcdHLine(xR2_old, xR2_old-3, yR2_previousPosition + HALF_RACKET_SIZE, PIXEL_OFF);
+             // draw new line on racket
+             halLcdHLine(xR2, xR2-3, yR2 - HALF_RACKET_SIZE, PIXEL_ON);
+          }
+     if(R2Dir == DOWN){
+             //clear old racket2
+             halLcdHLine(xR2_old, xR2_old-3, yR2_previousPosition - HALF_RACKET_SIZE, PIXEL_OFF);
+             // draw new line on racket
+             halLcdHLine(xR2, xR2-3, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
+     }
 
      xR1_old = xR1;
      yR1_old = yR1;
@@ -242,13 +293,13 @@ void halBoardInit(void)
   P5OUT &= ~0x80;
   P5REN |= 0x80;
 
-  // LED output
-  P1DIR = P1DIR | BIT0;
+  // LED outputs
+  P1DIR = P1DIR | (BIT0 + BIT1);
 
-  //Now configure SW1 (P2.6) as input with pull-down (example)
-  P2DIR &= ~BIT6; //pin 6 input
-  P2REN = P2REN | BIT6; //pin 6 internal pull R enabled
-  P2OUT = P2OUT | BIT6; //pin 6 pull-down
+  //Now configure SW1 (P2.6) and SW2 (P2.7) as inputs for Player2 with pull-down (example)
+  P2DIR &= ~(BIT6+BIT7); //pin 6 input
+  P2REN = P2REN | (BIT6+BIT7); //pin 6 internal pull R enabled
+  P2OUT = P2OUT | (BIT6+BIT7); //pin 6 pull-down
 
   //configure JOYSTICK DOWN (P2.5) and UP (P2.4)
   P2SEL = P2SEL & ~(BIT5 + BIT4); //GPIO
@@ -258,9 +309,9 @@ void halBoardInit(void)
 
   //configure interrupts for mechanical inputs
   // Set-up the interrupt
-   P2IES |= ( BIT6 + BIT5 + BIT4 ); // High/Low edge (falling edge)
-   P2IFG &= ~( BIT6 + BIT5 + BIT4 ); //IFG bits cleared
-   P2IE |= ( BIT6 + BIT5 + BIT4 ); //Enable pins interrupts
+   P2IES |= ( BIT7 + BIT6 + BIT5 + BIT4 ); // High/Low edge (falling edge)
+   P2IFG &= ~( BIT7 + BIT6 + BIT5 + BIT4 ); //IFG bits cleared
+   P2IE |= ( BIT7 + BIT6 + BIT5 + BIT4 ); //Enable pins interrupts
 }
 
 //NOTE: TimerA0 is initialized inside hal_lcd.c because it's already used for the LCD backlight PWM
@@ -324,6 +375,23 @@ __interrupt void my_Port2_ISR(void)
 
     if((P2IFG & BIT6)) //SW1 pressed for UP
             P2IFG &= ~BIT6; // interrupt serviced, clear corresponding interrupt flag
+
+    if((P2IFG & BIT7)) //SW2 pressed for DOWN
+                P2IFG &= ~BIT7; // interrupt serviced, clear corresponding interrupt flag
+
+    if(ballStateInstance == SCORING){
+        // Restart TimerA
+        TimerA1Init();
+
+        // Clear LCD
+        LCDInit();
+
+        // Change game state to starting
+        GameStartInit();
+
+        // This time keep the CPU awake to continue on with the game
+        __bic_SR_register_on_exit(LPM3_bits);
+    }
 
     /* Don't keep CPU awake to process the input, instead wait for TimerA interrupt to wake CPU
      * __bic_SR_register_on_exit(LPM3_bits);

@@ -58,12 +58,57 @@ int left_wall_reached()
 
 int P1_racket_hit() //check ball vs left racket
 {
- if( (yBall <= (yR1 + HALF_RACKET_SIZE)) && (yBall >= (yR1 - HALF_RACKET_SIZE)) && (xBall <= BALL_RADIUS+4) )
+ if( (yBall <= (yR1 + HALF_RACKET_SIZE)) && (yBall >= (yR1 - HALF_RACKET_SIZE)) && (xBall <= BALL_RADIUS+5) )
      return 1;
  else
      return 0;
 }
 
+int P2_racket_hit() //check ball vs right racket
+{
+ if( (yBall <= (yR2 + HALF_RACKET_SIZE)) && (yBall >= (yR2 - HALF_RACKET_SIZE)) && (xBall >= (LCD_COL - BALL_RADIUS - 5)) )
+     return 1;
+ else
+     return 0;
+}
+
+void updateScoreString(volatile char* scoreString, int scorer){
+
+    scoreString[0]= ' ';
+    scoreString[1]= 'G';
+    scoreString[2] = 'O';
+    scoreString[3]  = 'A';
+    scoreString[4]= 'L';
+    scoreString[5]= ' ';
+    scoreString[6]= 'P';
+    scoreString[7]= 'L';
+    scoreString[8]= 'A';
+    scoreString[9]= 'Y';
+    scoreString[10]= 'E';
+    scoreString[11]= 'R';
+    scoreString[12]= scorer + '0';
+    scoreString[13]= '\0';
+}
+
+void updateCurrentScoresString(volatile char* currentScoresString, volatile int p1score, volatile int p2score){
+
+    currentScoresString[0] = ' ';
+    currentScoresString[1]= ' ';
+    currentScoresString[2]= 'P';
+    currentScoresString[3]= '1';
+    currentScoresString[4]= ':';
+    currentScoresString[5]= ' ';
+    currentScoresString[6]= p1Score+'0';
+    currentScoresString[7]= ' ';
+    currentScoresString[8]= ' ';
+    currentScoresString[9]= 'P';
+    currentScoresString[10]= '2';
+    currentScoresString[11]= ':';
+    currentScoresString[12]= ' ';
+    currentScoresString[13]= p2Score+'0';
+    currentScoresString[14]= '\0';
+
+}
 
 //Update the state and position of the ball
 //(CPU is awaken by TimerA1 interval ints)
@@ -77,7 +122,8 @@ void ball_update(void)
   case STARTING: //"Start" state, init ball position
           yBall = LCD_ROW >> 1;
           xBall = LCD_COL >> 1;
-          x_displacement = +1;
+          if(x_displacement == NULL)
+              x_displacement = +1; // if not set, set to +1 to give an initial direction of travel
           y_displacement = 0;
           ballStateInstance = MOVING; // begin moving
           break;
@@ -95,10 +141,7 @@ void ball_update(void)
               y_displacement = -1;
           }
 
-          //check right wall bounce
-          if(right_wall_reached()){
-              x_displacement = -1;  //Right wall is here, bounce to direction 8
-          }
+
 
           if(P1_racket_hit()){
               x_displacement = +1;
@@ -110,8 +153,30 @@ void ball_update(void)
                   y_displacement = -1; // move ball upward too
           }
 
+          if(P2_racket_hit()){
+              x_displacement = -1;
+              if(yR2_old == yR2) // racket not moving
+                 y_displacement = 0;
+              if(yR2_old < yR2) // racket is moving down
+                 y_displacement = +1; // move ball downward too
+              if(yR2_old > yR2) // racket is moving up
+                 y_displacement = -1; // move ball upward too
+          }
+
+          //check left and right wall strikes
           if(left_wall_reached()){
+              Scorer =  PLAYER2;
+              p2Score += 1;
+              updateScoreString(&scoreString,2);
               ballStateInstance = SCORING;
+              x_displacement = -1; // When play restarts ball will go toward P2
+          }
+          if(right_wall_reached()){
+              Scorer =  PLAYER1;
+              p1Score += 1;
+              updateScoreString(&scoreString,1);
+              ballStateInstance = SCORING;
+              x_displacement = +1; // When play restarts ball will go toward P1
           }
 
           break;
@@ -119,8 +184,12 @@ void ball_update(void)
 
           //A very simplistic game end handling
           halLcdClearScreen(); //CLEAR SCREEN
-          halLcdPrintLine("     GOAL", 4, OVERWRITE_TEXT);//PRINT MESSAGE ......... NB ADD SCORES TO THE SCREEN
-          halLcdPrintLine(" Reset to start", 6, OVERWRITE_TEXT);//PRINT MESSAGE ..... NB CHANGE THIS TO PRESS A BUTTON TO RESTART, ALTERNATIVELY A TIMEOUT WILL RESTART TOO
+
+          halLcdPrintLine(scoreString, 1, OVERWRITE_TEXT);//PRINT MESSAGE ......... NB ADD SCORES TO THE SCREEN
+          updateCurrentScoresString(currentScoresString,p1Score,p2Score); // Update the current scores string
+          halLcdPrintLine(currentScoresString,3,OVERWRITE_TEXT);  // print to LCD
+          halLcdPrintLine(" Reset to start", 5, OVERWRITE_TEXT);//PRINT MESSAGE ..... NB CHANGE THIS TO PRESS A BUTTON TO RESTART, ALTERNATIVELY A TIMEOUT WILL RESTART TOO
+          halLcdPrintLine(" Press an input   to continue", 6, OVERWRITE_TEXT);//PRINT MESSAGE
           //stop TimerA1. This prevents new LCD and ball updates
           //but user input is operational because is driven by TimerB0
           TA1CTL= TA1CTL & ~(BIT5 + BIT4); //MC=00 (bits 5,4) 0b11001111
