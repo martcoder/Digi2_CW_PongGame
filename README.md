@@ -11,7 +11,7 @@ when a switch on the experimenter board is pressed; plus a ball
 moving sideways on initialisation. 
 
 Gameplay Features added to this include: 
-- Increasing racket size, which necesitated optimisation how it is drawin too
+- Increasing racket size, which necesitated optimising how it is drawn too
 - Using joystick for UP/DOWN movements of racket
 - Allowing the current movement of the racket to affect ball bounce off
 - 2 player game, using BUTTONSs to control UP/DOWN for second player
