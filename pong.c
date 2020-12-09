@@ -26,7 +26,6 @@ void TimerB0Init(void);
 void TimerA1Init(void);
 void GameStartInit(void);
 void UserInputs_update(void);
-void ContinuousPressInputs_update(void);
 void LCD_update(void);
 
 
@@ -70,16 +69,13 @@ void main(void)
 
     //CPU CONTINUES HERE WHEN IT IS AWAKEN AT THE END OF TimerA1 ISR
 
-    if(InputUpdatePending)
+    if(InputUpdatePending || ContinuousPressChecker)
     {
          InputUpdatePending=0;
+         ContinuousPressChecker = 0;
          UserInputs_update();
-         ContinuousPressChecker = 1;
     }
-    if(ContinuousPressChecker == 1){
-        ContinuousPressChecker = 0;
-        ContinuousPressInputs_update();
-    }
+
     if(BallUpdatePending)
     {
      BallUpdatePending=0;
@@ -140,11 +136,14 @@ void GameStartInit()
 //Read user inputs here (CPU is awaken by ADC12 conversion)
 void UserInputs_update(void)
 {
- R1Dir = STOP;
- //EXAMPLE: read button SW1
 
- //Check individual flags to find out if each direction was activated
-  if(!(P2IN & BIT5)){ //DOWN pressed
+    ContinuousPressChecker = 0;
+    R1Dir = STOP;
+    //EXAMPLE: read button SW1
+
+    //Check individual flags to find out if each direction was activated
+    if(!(P2IN & BIT5)){ //DOWN pressed
+        ContinuousPressChecker = 1; // Continue to check if this is continously held down
         if (yR1 < (LCD_ROW - HALF_RACKET_SIZE) ) //avoid overwriting top wall
         {
            yR1_previousPosition = yR1;
@@ -152,19 +151,21 @@ void UserInputs_update(void)
         }
         R1Dir = DOWN;
         return;
-  }
-  if(!(P2IN & BIT4)){ //UP pressed
-      if (yR1 > HALF_RACKET_SIZE) //avoid overwriting top wall
+    }
+    if(!(P2IN & BIT4)){ //UP pressed
+        ContinuousPressChecker = 1; // Continue to check if this is continously held down
+        if (yR1 > HALF_RACKET_SIZE) //avoid overwriting top wall
         {
            yR1_previousPosition = yR1;
            yR1 -= 1; //move racket 1 pixel up
         }
         R1Dir = UP;
         return;
-  }
+    }
 
- if(!(P2IN & BIT6)) //SW1 pressed for UP
- {
+    if(!(P2IN & BIT6)) //SW1 pressed for UP
+    {
+        ContinuousPressChecker = 1; // Continue to check if this is continously held down
         if (yR1 > HALF_RACKET_SIZE) //avoid overwriting top wall
         {
            yR1_previousPosition = yR1;
@@ -172,25 +173,6 @@ void UserInputs_update(void)
         }
         R1Dir = UP;
         return;
- }
-
-}
-
-void ContinuousPressInputs_update(void){
-
-    ContinuousPressChecker = 0;
-
-    // If an input is currently being pressed, set continuous press checker again
-    if(!(P2IN & BIT4))
-      ContinuousPressChecker = 1;
-    if(!(P2IN & BIT5))
-          ContinuousPressChecker = 1;
-    if(!(P2IN & BIT6))
-          ContinuousPressChecker = 1;
-
-    //If any of the inputs are being pressed, do a user inputs update
-    if(ContinuousPressChecker){
-        UserInputs_update();
     }
 }
 
@@ -326,29 +308,6 @@ __interrupt void TIMER1_A0_ISR(void)
    __bic_SR_register_on_exit(LPM3_bits);
  }
 }
-/*
- * Timer B0 overflow and CCRx (x>0) interrupt service routine
- * This is being used to periodically check for continuous pressing of an input
- * */
-#pragma vector=TIMER0_B1_VECTOR
-__interrupt void TIMER0_B1_ISR(void)
-{
-  switch(__even_in_range(TB0IV,14))
-  {
-    case  0: break;                // No interrupt
-    case  2: break;                // TB0CCR1 not used
-    case  4: break;                // TB0CCR2 not used
-    case  6: break;                // TB0CCR3 not used
-    case  8: break;                // TB0CCR4 not used
-    case 10: break;                // TB0CCR5 not used
-    case 12: break;                // TB0CCR6 not used
-    case 14:                       // TBIFG overflow, enable new ADC
-        ContinuousPressChecker = 1; //warn the CPU that continous press check is required
-        //Keep CPU active on exit to process user inputs in main loop
-        __bic_SR_register_on_exit(LPM3_bits);
-        break;
-  }
-}
 
 
 // Port 2 Interrupt Service Routine (ISR)
@@ -366,7 +325,8 @@ __interrupt void my_Port2_ISR(void)
     if((P2IFG & BIT6)) //SW1 pressed for UP
             P2IFG &= ~BIT6; // interrupt serviced, clear corresponding interrupt flag
 
-    // Keep CPU awake to process the input
-    __bic_SR_register_on_exit(LPM3_bits);
+    /* Don't keep CPU awake to process the input, instead wait for TimerA interrupt to wake CPU
+     * __bic_SR_register_on_exit(LPM3_bits);
+     */
 }
 
