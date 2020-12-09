@@ -23,6 +23,8 @@
 volatile unsigned int InputUpdatePending;
 volatile unsigned int BallUpdatePending;
 volatile unsigned int LCDUpdatePending;
+volatile unsigned int ContinuousPressChecker;
+volatile unsigned int TimerBGoing;
 
 //Game state
 enum gameState {BEGINNING,INPLAY,SCORED,END};
