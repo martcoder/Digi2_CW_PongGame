@@ -37,7 +37,7 @@ volatile unsigned int Ball_intervals = 0; //count number of base intervals elaps
 
 //main function
 void main(void)
-{  
+{
   volatile unsigned long  batt_voltage; 
   
   WDTCTL = WDTPW+WDTHOLD; // Stop WDT
@@ -47,7 +47,7 @@ void main(void)
   halBoardInit();  
 
   /* Initialize TimerB0, it provides a periodic timer for checking for conintuous input pressing */
-  TimerB0Init();
+  //TimerB0Init();
 
   /* Initialize TimerA1, it times ball and LCD updates */
   TimerA1Init();
@@ -68,21 +68,13 @@ void main(void)
     __bis_SR_register(LPM3_bits + GIE); 
     __no_operation(); //for debug
 
-    //CPU CONTINUES HERE WHEN IT IS AWAKEN AT THE END OF ADC12 or TimerA1 ISR
+    //CPU CONTINUES HERE WHEN IT IS AWAKEN AT THE END OF TimerA1 ISR
 
     if(InputUpdatePending)
     {
-
          InputUpdatePending=0;
          UserInputs_update();
-
-         if(TimerBGoing == 0){ // Don't initialise TimerB each time, only if not already initialised
-             // Begin checking for continuous pressing of an input
-             // ACLK, UP mode, clear TBR, enable rollover INT
-             TB0CTL    = TBSSEL_1 + MC_1 + TBCLR + TBIE; // Begin TimerB timing, when rollover happens and interrupt will occur which will check user input again
-             TimerBGoing = 1;
-         }
-
+         ContinuousPressChecker = 1;
     }
     if(ContinuousPressChecker == 1){
         ContinuousPressChecker = 0;
@@ -196,14 +188,9 @@ void ContinuousPressInputs_update(void){
     if(!(P2IN & BIT6))
           ContinuousPressChecker = 1;
 
-    //If any of the inputs are being pressed, update inputs and keep continuousPressChecker timer going
+    //If any of the inputs are being pressed, do a user inputs update
     if(ContinuousPressChecker){
         UserInputs_update();
-    }
-    // Otherwise stop the continuousPressChecker timer
-    else{
-        TB0CTL = TBSSEL_1 + MC_0 + TBCLR + TBIE;
-        TimerBGoing = 0;
     }
 }
 
@@ -305,25 +292,6 @@ void TimerA1Init(void)
   TA1CTL    = TASSEL_1 + MC_1 + TACLR; // ACLK, UP mode. Do not enable TAIE (rollover int)
 }
 
-//Initialize TimerB0 which is used for periodically checking for continuous presses of inputs after a press happens
-void TimerB0Init(void)
-{
-  //TB0CCR0   = INPUT_INTERVAL_mS*(Faclk/1000);
-  // INPUT_INTERVAL_mS*(32.768) ~ INPUT_INTERVAL_mS*(33)
-
-  TB0CCR0   = INPUT_INTERVAL_mS*33; //set timer interval
-
-  // Provide CCR1 value, time until CCR1 match must be greater than 75 us!
-  TB0CCR1   = 3;         //this time will be 3 * 1/32768kHZ (> 75usec)
-  TB0CCTL1  = OUTMOD_3;  // CCR1 output mode => SET/RESET. Do not enable TB0CCR3 INT
-
-  // ACLK, UP mode, clear TBR, enable rollover INT
-  //TB0CTL    = TBSSEL_1 + MC_1 + TBCLR + TBIE;
-
-  // ACLK, OFF mode to begin with to save power, clear TBR, enable rollover INT
-  TB0CTL    = TBSSEL_1 + MC_0 + TBCLR + TBIE;
-}
-
 /***********************************************************************
  *************** Interrupt Service Routines (ISRs) *********************
  ***********************************************************************/
@@ -353,7 +321,8 @@ __interrupt void TIMER1_A0_ISR(void)
  }
 
  if(BallUpdatePending || LCDUpdatePending)
- { //keep CPU active after ISR to process updates in main loop
+ {
+     //keep CPU active after ISR to process updates in main loop
    __bic_SR_register_on_exit(LPM3_bits);
  }
 }
@@ -394,92 +363,10 @@ __interrupt void my_Port2_ISR(void)
     if((P2IFG & BIT4)) //JOYSTICK UP pressed
            P2IFG &= ~BIT4;    // interrupt serviced, clear corresponding interrupt flag
 
-    if((P2IFG & BIT6)){ //SW1 pressed for UP
+    if((P2IFG & BIT6)) //SW1 pressed for UP
             P2IFG &= ~BIT6; // interrupt serviced, clear corresponding interrupt flag
 
     // Keep CPU awake to process the input
     __bic_SR_register_on_exit(LPM3_bits);
-/*
-    R1Dir = STOP;
-
-    if((P2IFG & BIT5)){ //JOYSTICK DOWN pressed
-       P2IFG &= ~BIT5;    // interrupt serviced, clear corresponding interrupt flag
-       P1OUT ^= BIT0;  // toggle LED 1 (P1.0) to show activity
-       if (yR1 < (LCD_ROW - HALF_RACKET_SIZE) ) //avoid overwriting top wall
-       {
-          yR1_previousPosition = yR1;
-          yR1 += 1; //move racket 1 pixels down
-       }
-       R1Dir = DOWN;
-    }
-
-    if((P2IFG & BIT4)){ //JOYSTICK UP pressed
-       P2IFG &= ~BIT4;    // interrupt serviced, clear corresponding interrupt flag
-       P1OUT ^= BIT0;  // toggle LED 1 (P1.0) to show activity
-       if (yR1 > HALF_RACKET_SIZE) //avoid overwriting top wall
-       {
-          yR1_previousPosition = yR1;
-          yR1 -= 1; //move racket 1 pixel up
-       }
-       R1Dir = UP;
-    }
-    if((P2IFG & BIT6)){ //SW1 pressed for UP
-        P2IFG &= ~BIT6; // interrupt serviced, clear corresponding interrupt flag
-
-        P1OUT ^= BIT0;  // toggle LED 1 (P1.0) to show activity
-
-        if (yR1 > HALF_RACKET_SIZE) //avoid overwriting top wall
-        {
-           yR1_previousPosition = yR1;
-           yR1 -= 1; //move racket 1 pixels up
-        }
-        R1Dir = UP;
-    }
-     // Keep CPU awake....to check for continuous pressing of the input...
-    __bic_SR_register_on_exit(LPM3_bits);
-*/
-
-/*
- R1Dir = STOP;
-
-
- //Check JOYSTICK individual flags to find out if each direction was activated
- if((P2IFG & BIT5)){ //DOWN pressed
-     P1OUT |= BIT0;  // Light LED 1 (P1.0) to show Player1 activity
-   P2IFG &= ~BIT5;    // interrupt serviced, clear corresponding interrupt flag
-   if (yR1 < (LCD_ROW - HALF_RACKET_SIZE) ) //avoid overwriting top wall
-   {
-      yR1_previousPosition = yR1;
-      yR1 += 1; //move racket 1 pixels down
-   }
-   R1Dir = DOWN;
-  return;
- }
-
- //Check JOYSTICK individual flags to find out if each direction was activated
-  if((P2IFG & BIT4)){ //UP pressed
-      P1OUT |= BIT0;  // Light LED 1 (P1.0) to show Player1 activity
-    P2IFG &= ~BIT4;    // interrupt serviced, clear corresponding interrupt flag
-    if (yR1 > HALF_RACKET_SIZE) //avoid overwriting top wall
-    {
-       yR1_previousPosition = yR1;
-       yR1 -= 1; //move racket 1 pixel up
-    }
-    R1Dir = UP;
-    return;
-  }
-
- if((P2IN & BIT6)) //SW1 pressed for UP
- {
-        if (yR1 > HALF_RACKET_SIZE) //avoid overwriting top wall
-        {
-           yR1_previousPosition = yR1;
-           yR1 -= 1; //move racket 1 pixels up
-        }
-        R1Dir = UP;
-        return;
- }
-*/
-
 }
 
