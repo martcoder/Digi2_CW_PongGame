@@ -15,6 +15,12 @@ Gameplay Features added to this include:
 - Using joystick for UP/DOWN movements of racket
 - Allowing the current movement of the racket to affect ball bounce off
 - 2 player game, using BUTTONSs to control UP/DOWN for second player
+- Racket movement affects ball e.g. moving racket up when ball strikes will
+  result in the ball gaining some upward direction
+- Racket have directional zones, e.g. when ball strikes a non-moving racket
+  it will change direction depending on where it hits the racket, centre 
+  zone will keep current up/down movement; upper zone will provide the ball
+  with upward directional movement; lower zone will provide downward direction. 
 - Goal splash screen showing which player scored and current scores totals
 - Players can continue after the splash screen by pressing an input, which 
   triggers the input interrupt ISR which ensures things carry on smoothly. 
