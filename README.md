@@ -13,7 +13,6 @@ moving sideways on initialisation.
 Gameplay Features added to this include: 
 - Increasing racket size, which necesitated optimising how it is drawn too
 - Using joystick for UP/DOWN movements of racket
-- Allowing the current movement of the racket to affect ball bounce off
 - 2 player game, using BUTTONSs to control UP/DOWN for second player
 - 1 player vs AI game
 - Intro menu to choose game mode, 2 player OR 1 player vs AI. 
@@ -24,8 +23,10 @@ Gameplay Features added to this include:
   zone will keep current up/down movement; upper zone will provide the ball
   with upward directional movement; lower zone will provide downward direction. 
 - Goal splash screen showing which player scored and current scores totals
-- Players can continue after the splash screen by pressing an input, which 
+- Players can continue after splash screens by pressing an input, which 
   triggers the input interrupt ISR which ensures things carry on smoothly. 
+- Added End of Game: first player to reach the winning score wins the game. 
+  Then by pressing an input or the Reset btn, the game will start again. 
 
 
 Other Features: 

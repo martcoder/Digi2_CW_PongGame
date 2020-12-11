@@ -157,6 +157,25 @@ void racket_movement_effect(int player){
     }
 }
 
+// Constructs the winning score string, later printed to LCD
+void updateWinningScoreString(volatile char* winningString, int scorer){
+
+    winningString[0]= 'P';
+    winningString[1]= 'L';
+    winningString[2]= 'A';
+    winningString[3]= 'Y';
+    winningString[4]= 'E';
+    winningString[5]= 'R';
+    winningString[6]= scorer + '0';
+    winningString[7]= ' ';
+    winningString[8]= 'W';
+    winningString[9]= 'I';
+    winningString[10]= 'N';
+    winningString[11]= 'S';
+    winningString[12]= '\0';
+}
+
+// Constructs the scorer score string, later printed to LCD
 void updateScoreString(volatile char* scoreString, int scorer){
 
     scoreString[0]= ' ';
@@ -175,6 +194,7 @@ void updateScoreString(volatile char* scoreString, int scorer){
     scoreString[13]= '\0';
 }
 
+// Constructs the current scores string, later printed to LCD
 void updateCurrentScoresString(volatile char* currentScoresString, volatile int p1score, volatile int p2score){
 
     currentScoresString[0] = ' ';
@@ -273,14 +293,36 @@ void ball_update(void)
           break;
   case SCORING:
 
-          //A very simplistic game end handling
+          //Handle scoring and winning
           halLcdClearScreen(); //CLEAR SCREEN
+          switch(Scorer){
+          case PLAYER1:
+              if(p1Score >= winningScore){
+                  updateWinningScoreString(winningString,1);
+                  halLcdPrintLine(winningString, 1, OVERWRITE_TEXT);//PRINT MESSAGE
+                  ballStateInstance = WINNING;
+              }
+              else{
+                  halLcdPrintLine(scoreString, 1, OVERWRITE_TEXT);//PRINT current scorer as scoring a goal
+              }
+              break;
+          case PLAYER2:
+              if(p2Score >= winningScore){
+                  updateWinningScoreString(winningString,2);
+                  halLcdPrintLine(winningString, 1, OVERWRITE_TEXT);//PRINT MESSAGE
+                  ballStateInstance = WINNING;
+              }
+              else{
+                  halLcdPrintLine(scoreString, 1, OVERWRITE_TEXT);//PRINT current scorer as scoring a goal
+              }
+              break;
+          }
 
-          halLcdPrintLine(scoreString, 1, OVERWRITE_TEXT);//PRINT MESSAGE ......... NB ADD SCORES TO THE SCREEN
           updateCurrentScoresString(currentScoresString,p1Score,p2Score); // Update the current scores string with current player scores
           halLcdPrintLine(currentScoresString,3,OVERWRITE_TEXT);  // print to LCD
-          halLcdPrintLine(" Reset to start", 5, OVERWRITE_TEXT);//PRINT MESSAGE ..... NB CHANGE THIS TO PRESS A BUTTON TO RESTART, ALTERNATIVELY A TIMEOUT WILL RESTART TOO
-          halLcdPrintLine(" Press an input   to continue", 6, OVERWRITE_TEXT);//PRINT MESSAGE
+
+          halLcdPrintLine(" Press an input   or Reset btn", 4, OVERWRITE_TEXT);//PRINT MESSAGE
+          halLcdPrintLine("to continue", 6, OVERWRITE_TEXT);//PRINT MESSAGE
           //stop TimerA1. This prevents new LCD and ball updates
           //but user input is operational thanks to Port2 interrupts
           TA1CTL= TA1CTL & ~(BIT5 + BIT4); //MC=00 (bits 5,4) 0b11001111
@@ -298,6 +340,7 @@ void ball_update(void)
            * */
 
          break;
+
  }
 
 }

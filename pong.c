@@ -24,6 +24,7 @@ void halBoardInit(void);
 void LCDInit(void);
 void TimerB0Init(void);
 void TimerA1Init(void);
+void GameIntroInit(void);
 void GameStartInit(void);
 void UserInputs_update(void);
 void LCD_update(void);
@@ -60,7 +61,9 @@ void main(void)
   //Initialize game variables
   GameStartInit();
 
-  ballStateInstance = INTRO; // Want to set this here so that during the ball_update() function it will show menu for play mode, e.g. 2player or 1 player vs AI, before play begins
+  // Initialise Game Intro variables
+  GameIntroInit();
+
 
   while(1) //infinite main loop
   {
@@ -129,6 +132,13 @@ void LCDInit(void)
  halLcdClearScreen();
 }
 
+void GameIntroInit(){
+
+    ballStateInstance = INTRO; // Want to set this here so that during the ball_update() function it will show menu for play mode, e.g. 2player or 1 player vs AI, before play begins
+    p1Score = 0;
+    p2Score = 0;
+}
+
 //This function can be used to initialize game variables at boot-up
 //Most variables are  declared into general_settings.h
 void GameStartInit()
@@ -171,6 +181,9 @@ void GameStartInit()
 
  //Initial state of the ball
  ballStateInstance = STARTING;
+
+ // Set the winning score value
+ winningScore = 3;
 
 }
 
@@ -429,6 +442,21 @@ __interrupt void my_Port2_ISR(void)
         // Change game state to starting
         GameStartInit();
     }
+
+    if(ballStateInstance == WINNING){
+            // Restart TimerA
+            TimerA1Init();
+
+            // Clear LCD
+            LCDInit();
+
+            // Change game state to starting
+            GameStartInit();
+
+            // Reset scores and show Intro Menu
+            GameIntroInit();
+
+        }
 
 
     /* Don't keep CPU awake to process the input, instead wait for TimerA interrupt to wake CPU

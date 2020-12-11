@@ -32,7 +32,7 @@ volatile unsigned int LCDUpdatePending;
 volatile unsigned int ContinuousPressChecker;
 
 //Ball handling
-enum ballState {INTRO,STARTING,MOVING,SCORING};
+enum ballState {INTRO,STARTING,MOVING,SCORING,WINNING};
 volatile enum ballState ballStateInstance; //Current ball state
 volatile int xBall, yBall; //Current ball position
 volatile int xBall_old, yBall_old; //For ball trail position
@@ -56,6 +56,8 @@ enum PlayerEnum {PLAYER1,PLAYER2};
 volatile int p1Score,p2Score;
 volatile char scoreString[14];
 volatile char currentScoresString[15];
+volatile char winningString[13];
+volatile int winningScore;
 
 volatile enum PlayerEnum Scorer;
 volatile enum PlayerEnum Player;
