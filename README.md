@@ -15,6 +15,8 @@ Gameplay Features added to this include:
 - Using joystick for UP/DOWN movements of racket
 - Allowing the current movement of the racket to affect ball bounce off
 - 2 player game, using BUTTONSs to control UP/DOWN for second player
+- 1 player vs AI game
+- Intro menu to choose game mode, 2 player OR 1 player vs AI. 
 - Racket movement affects ball e.g. moving racket up when ball strikes will
   result in the ball gaining some upward direction
 - Racket have directional zones, e.g. when ball strikes a non-moving racket
