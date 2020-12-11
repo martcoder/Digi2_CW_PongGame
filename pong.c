@@ -20,6 +20,7 @@
 
 
 /* 5xx functions / variables */ 
+void ai_movement(void);
 void halBoardInit(void);
 void LCDInit(void);
 void TimerB0Init(void);
@@ -93,11 +94,29 @@ void main(void)
     }
     if(LCDUpdatePending)
     {
+        if(AI_enabled)
+            ai_movement(); // update positions if inputs are currently pressed, also set ContinuousPressChecker if they are
      LCDUpdatePending=0;
      LCD_update();
     }
 
   }   	  
+}
+
+void ai_movement(void){
+
+    if( (yR2 > HALF_RACKET_SIZE) && (yR2 > yBall) ){ // if AI racket not hitting top wall, and also lower than the ball, move racket up
+        yR2_previousPosition = yR2;
+        yR2 -= 1; //move racket 1 pixels up
+        R2Dir = UP;
+        return;
+    }
+    if( (yR2 < (LCD_ROW - HALF_RACKET_SIZE)) && (yR2 < yBall) ){ // if AI racket not hitting bottom wall, and also higher than ball, move racket down
+        yR2_previousPosition = yR2;
+        yR2 += 1; //move racket 1 pixels down
+        R2Dir = DOWN;
+        return;
+    }
 }
 
 //LCD initialization
@@ -153,6 +172,9 @@ void GameStartInit()
  //Initial state of the ball
  ballStateInstance = STARTING;
 
+ // Choose whether to use AI or do 2 player
+ AI_enabled = 1;
+
 }
 
 //Read user inputs here (CPU is awaken by ADC12 conversion)
@@ -188,27 +210,27 @@ void UserInputs_update(void)
 
     if(!(P2IN & BIT6)) //SW1 pressed for UP for Player2
     {
-        ContinuousPressChecker = 1; // Continue to check if this is continously held down
-        if (yR2 > HALF_RACKET_SIZE) //avoid overwriting top wall
-        {
-           yR2_previousPosition = yR2;
-           yR2 -= 1; //move racket 1 pixels up
-        }
-        R2Dir = UP;
-        return;
+          ContinuousPressChecker = 1; // Continue to check if this is continously held down
+          if (yR2 > HALF_RACKET_SIZE) //avoid overwriting top wall
+          {
+              yR2_previousPosition = yR2;
+              yR2 -= 1; //move racket 1 pixels up
+          }
+          R2Dir = UP;
+          return;
     }
 
     if(!(P2IN & BIT7)) //SW2 pressed for DOWN for Player2
-        {
-            ContinuousPressChecker = 1; // Continue to check if this is continously held down
-            if (yR2 < (LCD_ROW - HALF_RACKET_SIZE) ) //avoid overwriting top wall
-            {
-                yR2_previousPosition = yR2;
-                yR2 += 1; //move racket 1 pixels down
-            }
-            R2Dir = DOWN;
-            return;
-        }
+    {
+          ContinuousPressChecker = 1; // Continue to check if this is continously held down
+          if (yR2 < (LCD_ROW - HALF_RACKET_SIZE) ) //avoid overwriting top wall
+          {
+             yR2_previousPosition = yR2;
+             yR2 += 1; //move racket 1 pixels down
+          }
+          R2Dir = DOWN;
+          return;
+     }
 }
 
 //Update drawings in LCD screen (CPU is awaken by TimerA1 interval ints)
@@ -344,6 +366,8 @@ __interrupt void TIMER1_A0_ISR(void)
       LCD_intervals = 0;
    }
  }
+
+
 
  if(!BallUpdatePending) //if update still pending, skip this interval
  {

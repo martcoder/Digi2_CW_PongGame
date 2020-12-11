@@ -64,4 +64,7 @@ volatile char currentScoresString[15];
 volatile enum PlayerEnum Scorer;
 volatile enum PlayerEnum Player;
 
+//AI handling
+volatile int AI_enabled;
+
 #endif /* GENERAL_SETTINGS_H_ */

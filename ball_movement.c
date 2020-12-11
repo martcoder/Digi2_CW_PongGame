@@ -120,16 +120,17 @@ void racket_movement_effect(int player){
     if(player == 1){
         if(yR1_old == yR1){ // racket not moving
             // When racket is not moving, the areas of the racket come into effect
-            if(P1_racket_centre_hit()){
+            if(P1_racket_centre_hit()){ // hitting the centre of a racket will have negligible effect on changing ball y_displacement
                y_displacement = y_displacement;
             }
-            if(P1_racket_upper_hit()){
+            if(P1_racket_upper_hit()){// hitting the upper part of a racket will increase upward direction ball y_displacement
                y_displacement = y_displacement - 1;
             }
-            if(P1_racket_lower_hit()){
+            if(P1_racket_lower_hit()){// hitting the lower part of a racket will increase downward direction ball y_displacement
                y_displacement = y_displacement +1;
             }
         }
+        // for a moving racket, instead of using racket zones, use the direction of racket movement to add to the ball's movement in the same direction
         if(yR1_old < yR1) // racket is moving down
             y_displacement = y_displacement+1; // move ball downward too
         if(yR1_old > yR1) // racket is moving up
@@ -138,16 +139,17 @@ void racket_movement_effect(int player){
     if(player == 2){
         if(yR2_old == yR2){ // racket not moving
             // When racket is not moving, the areas of the racket come into effect
-            if(P2_racket_centre_hit()){
+            if(P2_racket_centre_hit()){// hitting the centre of a racket will have negligible effect on changing ball y_displacement
                y_displacement = y_displacement;
             }
-            if(P2_racket_upper_hit()){
+            if(P2_racket_upper_hit()){// hitting the upper part of a racket will increase upward direction ball y_displacement
                y_displacement = y_displacement - 1;
             }
-            if(P2_racket_lower_hit()){
+            if(P2_racket_lower_hit()){// hitting the lower part of a racket will increase downward direction ball y_displacement
                y_displacement = y_displacement +1;
             }
         }
+        // for a moving racket, instead of using racket zones, use the direction of racket movement to add to the ball's movement in the same direction
         if(yR2_old < yR2) // racket is moving down
            y_displacement = y_displacement+1; // move ball downward too
         if(yR2_old > yR2) // racket is moving up
@@ -217,35 +219,35 @@ void ball_update(void)
           yBall = yBall + y_displacement;
 
           if(top_wall_reached()){
-              y_displacement *= -1;
+              y_displacement *= -1; // flip the y direction of the ball
           }
 
           if(bottom_wall_reached()){
-              y_displacement *= -1;
+              y_displacement *= -1; // flip the y direction of the ball
           }
 
           if(P1_racket_hit()){
-              x_displacement = +1;
-              racket_movement_effect(1);
+              x_displacement = +1; // 'bounce' the ball off the racket and keep it moving toward opposite side
+              racket_movement_effect(1); // check to see if racket is moving or not, and add to the ball's direction displacement depending on this
           }
 
           if(P2_racket_hit()){
-              x_displacement = -1;
-              racket_movement_effect(2);
+              x_displacement = -1;// 'bounce' the ball off the racket and keep it moving toward opposite side
+              racket_movement_effect(2); // check to see if racket is moving or not, and add to the ball's direction displacement depending on this
           }
 
           //check left and right wall strikes
           if(left_wall_reached()){
               Scorer =  PLAYER2;
-              p2Score += 1;
-              updateScoreString(&scoreString,2);
+              p2Score += 1; // Increment player2 score
+              updateScoreString(&scoreString,2); // Update the score string with the latest player who scored
               ballStateInstance = SCORING;
               x_displacement = -1; // When play restarts ball will go toward P2
           }
           if(right_wall_reached()){
               Scorer =  PLAYER1;
-              p1Score += 1;
-              updateScoreString(&scoreString,1);
+              p1Score += 1; // Increment player1 score
+              updateScoreString(&scoreString,1); // Update the score string with the latest player who scored
               ballStateInstance = SCORING;
               x_displacement = +1; // When play restarts ball will go toward P1
           }
@@ -257,13 +259,17 @@ void ball_update(void)
           halLcdClearScreen(); //CLEAR SCREEN
 
           halLcdPrintLine(scoreString, 1, OVERWRITE_TEXT);//PRINT MESSAGE ......... NB ADD SCORES TO THE SCREEN
-          updateCurrentScoresString(currentScoresString,p1Score,p2Score); // Update the current scores string
+          updateCurrentScoresString(currentScoresString,p1Score,p2Score); // Update the current scores string with current player scores
           halLcdPrintLine(currentScoresString,3,OVERWRITE_TEXT);  // print to LCD
           halLcdPrintLine(" Reset to start", 5, OVERWRITE_TEXT);//PRINT MESSAGE ..... NB CHANGE THIS TO PRESS A BUTTON TO RESTART, ALTERNATIVELY A TIMEOUT WILL RESTART TOO
           halLcdPrintLine(" Press an input   to continue", 6, OVERWRITE_TEXT);//PRINT MESSAGE
           //stop TimerA1. This prevents new LCD and ball updates
           //but user input is operational because is driven by TimerB0
           TA1CTL= TA1CTL & ~(BIT5 + BIT4); //MC=00 (bits 5,4) 0b11001111
+
+          // Bit-set (LPM3_bits + GIE) in SR register to enter LPM3 mode
+          __bis_SR_register(LPM3_bits + GIE);
+          __no_operation(); //for debug
 
           /*MIGHT WANT TO THINK ABOUT HAVING A TIMEOUT BEFORE IT CONTINUES BY ITSELF BACK TO START*/
           /*
