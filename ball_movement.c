@@ -94,19 +94,60 @@ int P2_racket_hit() //check ball vs right racket
      return 0;
 }
 
-void racket_movement_effect(int player){
+int P2_racket_centre_hit() //check ball vs left racket centre
+{
+ if( (yBall <= (yR2 + QUARTER_RACKET_SIZE)) && (yBall >= (yR2 - QUARTER_RACKET_SIZE)) && (xBall >= BALL_RADIUS-5) )
+     return 1;
+ else
+     return 0;
+}
+int P2_racket_upper_hit() //check ball vs left racket upper
+{
+ if( (yBall < (yR2 - QUARTER_RACKET_SIZE)) && (yBall >= (yR2 - HALF_RACKET_SIZE)) && (xBall >= BALL_RADIUS-5) )
+     return 1;
+ else
+     return 0;
+}
+int P2_racket_lower_hit() //check ball vs left racket lower
+{
+ if( (yBall > (yR2 + QUARTER_RACKET_SIZE)) && (yBall <= (yR2 + HALF_RACKET_SIZE)) && (xBall >= BALL_RADIUS-5) )
+     return 1;
+ else
+     return 0;
+}
 
+void racket_movement_effect(int player){
     if(player == 1){
-        if(yR1_old == yR1) // racket not moving
-            y_displacement = y_displacement;
+        if(yR1_old == yR1){ // racket not moving
+            // When racket is not moving, the areas of the racket come into effect
+            if(P1_racket_centre_hit()){
+               y_displacement = y_displacement;
+            }
+            if(P1_racket_upper_hit()){
+               y_displacement = y_displacement - 1;
+            }
+            if(P1_racket_lower_hit()){
+               y_displacement = y_displacement +1;
+            }
+        }
         if(yR1_old < yR1) // racket is moving down
             y_displacement = y_displacement+1; // move ball downward too
         if(yR1_old > yR1) // racket is moving up
             y_displacement = y_displacement-1; // move ball upward too
     }
     if(player == 2){
-        if(yR2_old == yR2) // racket not moving
-           y_displacement = y_displacement;
+        if(yR2_old == yR2){ // racket not moving
+            // When racket is not moving, the areas of the racket come into effect
+            if(P2_racket_centre_hit()){
+               y_displacement = y_displacement;
+            }
+            if(P2_racket_upper_hit()){
+               y_displacement = y_displacement - 1;
+            }
+            if(P2_racket_lower_hit()){
+               y_displacement = y_displacement +1;
+            }
+        }
         if(yR2_old < yR2) // racket is moving down
            y_displacement = y_displacement+1; // move ball downward too
         if(yR2_old > yR2) // racket is moving up
