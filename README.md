@@ -1,4 +1,4 @@
-# Digi2_CW_PongGame
+# PongGame
 
 This is based on the code providing by Mario Mata. 
 
