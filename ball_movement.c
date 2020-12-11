@@ -64,12 +64,54 @@ int P1_racket_hit() //check ball vs left racket
      return 0;
 }
 
+int P1_racket_centre_hit() //check ball vs left racket centre
+{
+ if( (yBall <= (yR1 + QUARTER_RACKET_SIZE)) && (yBall >= (yR1 - QUARTER_RACKET_SIZE)) && (xBall <= BALL_RADIUS+5) )
+     return 1;
+ else
+     return 0;
+}
+int P1_racket_upper_hit() //check ball vs left racket upper
+{
+ if( (yBall < (yR1 - QUARTER_RACKET_SIZE)) && (yBall >= (yR1 - HALF_RACKET_SIZE)) && (xBall <= BALL_RADIUS+5) )
+     return 1;
+ else
+     return 0;
+}
+int P1_racket_lower_hit() //check ball vs left racket lower
+{
+ if( (yBall > (yR1 + QUARTER_RACKET_SIZE)) && (yBall <= (yR1 + HALF_RACKET_SIZE)) && (xBall <= BALL_RADIUS+5) )
+     return 1;
+ else
+     return 0;
+}
+
 int P2_racket_hit() //check ball vs right racket
 {
  if( (yBall <= (yR2 + HALF_RACKET_SIZE)) && (yBall >= (yR2 - HALF_RACKET_SIZE)) && (xBall >= (LCD_COL - BALL_RADIUS - 5)) )
      return 1;
  else
      return 0;
+}
+
+void racket_movement_effect(int player){
+
+    if(player == 1){
+        if(yR1_old == yR1) // racket not moving
+            y_displacement = y_displacement;
+        if(yR1_old < yR1) // racket is moving down
+            y_displacement = y_displacement+1; // move ball downward too
+        if(yR1_old > yR1) // racket is moving up
+            y_displacement = y_displacement-1; // move ball upward too
+    }
+    if(player == 2){
+        if(yR2_old == yR2) // racket not moving
+           y_displacement = y_displacement;
+        if(yR2_old < yR2) // racket is moving down
+           y_displacement = y_displacement+1; // move ball downward too
+        if(yR2_old > yR2) // racket is moving up
+           y_displacement = y_displacement-1; // move ball upward too
+    }
 }
 
 void updateScoreString(volatile char* scoreString, int scorer){
@@ -134,33 +176,21 @@ void ball_update(void)
           yBall = yBall + y_displacement;
 
           if(top_wall_reached()){
-              y_displacement = +1;
+              y_displacement *= -1;
           }
 
           if(bottom_wall_reached()){
-              y_displacement = -1;
+              y_displacement *= -1;
           }
-
-
 
           if(P1_racket_hit()){
               x_displacement = +1;
-              if(yR1_old == yR1) // racket not moving
-                  y_displacement = 0;
-              if(yR1_old < yR1) // racket is moving down
-                  y_displacement = +1; // move ball downward too
-              if(yR1_old > yR1) // racket is moving up
-                  y_displacement = -1; // move ball upward too
+              racket_movement_effect(1);
           }
 
           if(P2_racket_hit()){
               x_displacement = -1;
-              if(yR2_old == yR2) // racket not moving
-                 y_displacement = 0;
-              if(yR2_old < yR2) // racket is moving down
-                 y_displacement = +1; // move ball downward too
-              if(yR2_old > yR2) // racket is moving up
-                 y_displacement = -1; // move ball upward too
+              racket_movement_effect(2);
           }
 
           //check left and right wall strikes

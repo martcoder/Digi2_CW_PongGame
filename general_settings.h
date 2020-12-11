@@ -17,6 +17,7 @@
 #define LCD_CONTRAST_LEVEL 90 //70 to 127
 
 #define HALF_RACKET_SIZE 16 //racket width in pixels
+#define QUARTER_RACKET_SIZE 8
 #define BALL_RADIUS 1 //ball radius in pixels
 
 //Timing intervals for the game
@@ -55,11 +56,12 @@ volatile enum VDir R1Dir; //last movement direction for racket 1 (used for ball 
 volatile enum VDir R2Dir; //last movement direction for racket 2 (used for ball control)
 
 //Score handling
-enum PlayerScorer {PLAYER1,PLAYER2};
+enum PlayerEnum {PLAYER1,PLAYER2};
 volatile int p1Score,p2Score;
 volatile char scoreString[14];
 volatile char currentScoresString[15];
 
-volatile enum PlayerScorer Scorer;
+volatile enum PlayerEnum Scorer;
+volatile enum PlayerEnum Player;
 
 #endif /* GENERAL_SETTINGS_H_ */

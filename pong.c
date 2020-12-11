@@ -247,6 +247,8 @@ void LCD_update(void)
 
      xR1_old = xR1;
      yR1_old = yR1;
+     xR2_old = xR2;
+     yR2_old = yR2;
 
      //Clear oldest ball
      halLcdCircle(xBall_old2, yBall_old2, BALL_RADIUS, PIXEL_OFF);
