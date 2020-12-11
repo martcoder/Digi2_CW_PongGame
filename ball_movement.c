@@ -204,6 +204,24 @@ void ball_update(void)
  //calculate new position and bouncing
  switch(ballStateInstance)
  {
+  case INTRO: // Game intro is happening, e.g. menu selection
+      halLcdClearScreen(); //CLEAR SCREEN
+
+      halLcdPrintLine("Choose play mode:", 1, OVERWRITE_TEXT);//PRINT MESSAGE ......... NB ADD SCORES TO THE SCREEN
+      halLcdPrintLine("JOYSTICK UP", 3, OVERWRITE_TEXT);//PRINT MESSAGE
+      halLcdPrintLine("==2 player==", 4, OVERWRITE_TEXT);//PRINT MESSAGE
+      halLcdPrintLine("JOYSTICK DOWN", 6, OVERWRITE_TEXT);//PRINT MESSAGE
+      halLcdPrintLine("==vs AI==", 7, OVERWRITE_TEXT);//PRINT MESSAGE
+      //stop TimerA1. This prevents new LCD and ball updates
+      //but user input is operational as Port2 interrupts can still be triggered
+      TA1CTL= TA1CTL & ~(BIT5 + BIT4); //MC=00 (bits 5,4) 0b11001111
+
+      // Now send CPU to sleep and wait for user to decide play mode
+      // Bit-set (LPM3_bits + GIE) in SR register to enter LPM3 mode
+      __bis_SR_register(LPM3_bits + GIE);
+      __no_operation(); //for debug
+     break;
+
   case STARTING: //"Start" state, init ball position
           yBall = LCD_ROW >> 1;
           xBall = LCD_COL >> 1;
@@ -264,7 +282,7 @@ void ball_update(void)
           halLcdPrintLine(" Reset to start", 5, OVERWRITE_TEXT);//PRINT MESSAGE ..... NB CHANGE THIS TO PRESS A BUTTON TO RESTART, ALTERNATIVELY A TIMEOUT WILL RESTART TOO
           halLcdPrintLine(" Press an input   to continue", 6, OVERWRITE_TEXT);//PRINT MESSAGE
           //stop TimerA1. This prevents new LCD and ball updates
-          //but user input is operational because is driven by TimerB0
+          //but user input is operational thanks to Port2 interrupts
           TA1CTL= TA1CTL & ~(BIT5 + BIT4); //MC=00 (bits 5,4) 0b11001111
 
           // Bit-set (LPM3_bits + GIE) in SR register to enter LPM3 mode

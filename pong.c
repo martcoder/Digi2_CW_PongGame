@@ -18,7 +18,6 @@
 #include    "ball_movement.h"
 
 
-
 /* 5xx functions / variables */ 
 void ai_movement(void);
 void halBoardInit(void);
@@ -42,7 +41,6 @@ void main(void)
   
   WDTCTL = WDTPW+WDTHOLD; // Stop WDT
   
-
   // Initialize board
   halBoardInit();  
 
@@ -61,6 +59,8 @@ void main(void)
 
   //Initialize game variables
   GameStartInit();
+
+  ballStateInstance = INTRO; // Want to set this here so that during the ball_update() function it will show menu for play mode, e.g. 2player or 1 player vs AI, before play begins
 
   while(1) //infinite main loop
   {
@@ -94,7 +94,7 @@ void main(void)
     }
     if(LCDUpdatePending)
     {
-        if(AI_enabled)
+        if(AI_enabled == 1)
             ai_movement(); // update positions if inputs are currently pressed, also set ContinuousPressChecker if they are
      LCDUpdatePending=0;
      LCD_update();
@@ -172,16 +172,13 @@ void GameStartInit()
  //Initial state of the ball
  ballStateInstance = STARTING;
 
- // Choose whether to use AI or do 2 player
- AI_enabled = 1;
-
 }
 
 //Read user inputs here (CPU is awaken by ADC12 conversion)
 void UserInputs_update(void)
 {
 
-    ContinuousPressChecker = 0;
+    ContinuousPressChecker = 0; // This will be set below if an input is being pressed
     R1Dir = STOP;
     R2Dir = STOP;
     //EXAMPLE: read button SW1
@@ -405,6 +402,23 @@ __interrupt void my_Port2_ISR(void)
     if((P2IFG & BIT7)) //SW2 pressed for DOWN
                 P2IFG &= ~BIT7; // interrupt serviced, clear corresponding interrupt flag
 
+    if(ballStateInstance == INTRO){
+        if((!(P2IN & BIT4))) //JOYSTICK UP pressed
+            AI_enabled = 0;
+        if((!(P2IN & BIT5))) // JOYSTICK DOWN pressed
+            AI_enabled = 1;
+
+        // Initialise and start gameplay
+        // Restart TimerA
+        TimerA1Init();
+
+        // Clear LCD
+        LCDInit();
+
+        // Change game state to starting
+        GameStartInit();
+    }
+
     if(ballStateInstance == SCORING){
         // Restart TimerA
         TimerA1Init();
@@ -414,10 +428,8 @@ __interrupt void my_Port2_ISR(void)
 
         // Change game state to starting
         GameStartInit();
-
-        // This time keep the CPU awake to continue on with the game
-        __bic_SR_register_on_exit(LPM3_bits);
     }
+
 
     /* Don't keep CPU awake to process the input, instead wait for TimerA interrupt to wake CPU
      * __bic_SR_register_on_exit(LPM3_bits);
