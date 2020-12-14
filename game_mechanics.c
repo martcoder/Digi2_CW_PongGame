@@ -1,5 +1,5 @@
 /*********************************************************
- * ball_movement.c
+ * game_mechanics.c
  *
  * Implements the state diagram for the ball's movement
  * Only a few states are completed, refer to the CW description
@@ -8,7 +8,7 @@
  * Created on: Nov 2017
  * Author: M MATA (GCU)
  *********************************************************/
-#include "ball_movement.h"
+#include <game_mechanics.h>
 #include "general_settings.h"
 #include "hal_lcd.h"
 #include "msp430f5438a.h"
@@ -322,7 +322,7 @@ void game_update(void)
           halLcdPrintLine(currentScoresString,3,OVERWRITE_TEXT);  // print to LCD
 
           halLcdPrintLine(" Press an input   or Reset btn", 4, OVERWRITE_TEXT);//PRINT MESSAGE
-          halLcdPrintLine("to continue", 6, OVERWRITE_TEXT);//PRINT MESSAGE
+          halLcdPrintLine(" to continue", 6, OVERWRITE_TEXT);//PRINT MESSAGE
           //stop TimerA1. This prevents new LCD and ball updates
           //but user input is operational thanks to Port2 interrupts
           TA1CTL= TA1CTL & ~(BIT5 + BIT4); //MC=00 (bits 5,4) 0b11001111

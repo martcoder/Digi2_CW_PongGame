@@ -10,12 +10,12 @@
 //  November 2017
 //******************************************************************************	
 
+#include <game_mechanics.h>
 #include    "msp430f5438a.h"
 #include	"hal_UCS.h"
 #include 	"hal_PMM.h"
 #include    "hal_lcd.h"
 #include    "general_settings.h"
-#include    "ball_movement.h"
 
 
 /* 5xx functions / variables */ 
@@ -152,11 +152,6 @@ void GameStartInit()
  GameUpdatePending = 0;
  LCDUpdatePending = 0;
 
- //Draw top, right and bottom walls
- halLcdLine(0,0, LCD_COL-1,0, PIXEL_ON);
- halLcdLine(LCD_COL-1,0, LCD_COL-1,LCD_ROW-1, PIXEL_ON);
- halLcdLine(0,LCD_ROW-1, LCD_COL-1,LCD_ROW-1, PIXEL_ON);
-
  //Initial position of racket 1
  xR1 = 0; //left-hand side
  yR1 = LCD_ROW >> 1; //middle row
@@ -185,6 +180,9 @@ void GameStartInit()
  yR2_old = yR2;
  yR2_previousPosition = yR2;
  xR2_old = xR2;
+
+ R1Dir = STOP;
+ R2Dir = STOP;
 
  //Initial state of the ball
  gameStateInstance = STARTING;
@@ -300,6 +298,7 @@ void LCD_update(void)
                   // draw new line on racket
                   halLcdHLine(xR2, xR2-3, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
       }
+
 
           xR1_old = xR1;
           yR1_old = yR1;
