@@ -217,12 +217,12 @@ void updateCurrentScoresString(volatile char* currentScoresString, volatile int 
 
 //Update the state and position of the ball
 //(CPU is awaken by TimerA1 interval ints)
-void ball_update(void)
+void game_update(void)
 {
 
 
  //calculate new position and bouncing
- switch(ballStateInstance)
+ switch(gameStateInstance)
  {
   case INTRO: // Game intro is happening, e.g. menu selection
       halLcdClearScreen(); //CLEAR SCREEN
@@ -248,7 +248,7 @@ void ball_update(void)
           if(x_displacement == NULL)
               x_displacement = +1; // if not set, set to +1 to give an initial direction of travel
           y_displacement = 0;
-          ballStateInstance = MOVING; // begin moving
+          gameStateInstance = MOVING; // begin moving
           break;
 
   case MOVING: //moving in free space
@@ -279,14 +279,14 @@ void ball_update(void)
               Scorer =  PLAYER2;
               p2Score += 1; // Increment player2 score
               updateScoreString(&scoreString,2); // Update the score string with the latest player who scored
-              ballStateInstance = SCORING;
+              gameStateInstance = SCORING;
               x_displacement = -1; // When play restarts ball will go toward P2
           }
           if(right_wall_reached()){
               Scorer =  PLAYER1;
               p1Score += 1; // Increment player1 score
               updateScoreString(&scoreString,1); // Update the score string with the latest player who scored
-              ballStateInstance = SCORING;
+              gameStateInstance = SCORING;
               x_displacement = +1; // When play restarts ball will go toward P1
           }
 
@@ -300,7 +300,7 @@ void ball_update(void)
               if(p1Score >= winningScore){
                   updateWinningScoreString(winningString,1);
                   halLcdPrintLine(winningString, 1, OVERWRITE_TEXT);//PRINT MESSAGE
-                  ballStateInstance = WINNING;
+                  gameStateInstance = WINNING;
               }
               else{
                   halLcdPrintLine(scoreString, 1, OVERWRITE_TEXT);//PRINT current scorer as scoring a goal
@@ -310,7 +310,7 @@ void ball_update(void)
               if(p2Score >= winningScore){
                   updateWinningScoreString(winningString,2);
                   halLcdPrintLine(winningString, 1, OVERWRITE_TEXT);//PRINT MESSAGE
-                  ballStateInstance = WINNING;
+                  gameStateInstance = WINNING;
               }
               else{
                   halLcdPrintLine(scoreString, 1, OVERWRITE_TEXT);//PRINT current scorer as scoring a goal

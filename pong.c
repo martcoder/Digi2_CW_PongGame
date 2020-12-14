@@ -31,7 +31,7 @@ void LCD_update(void);
 
 
 volatile unsigned int LCD_intervals = 0; //count number of base intervals elapsed
-volatile unsigned int Ball_intervals = 0; //count number of base intervals elapsed
+volatile unsigned int Game_intervals = 0; //count number of base intervals elapsed
 //volatile =  compiler will not optimize these variables
 
 
@@ -83,18 +83,23 @@ void main(void)
      * in the UserInputs_update function, e.g. if input currently high, then check it
      * again next time round
      */
+
     if(InputUpdatePending || ContinuousPressChecker)
     {
-         InputUpdatePending=0; // clear var
-         ContinuousPressChecker = 0; // clear var
-         UserInputs_update(); // update positions if inputs are currently pressed, also set ContinuousPressChecker if they are
+                 InputUpdatePending=0; // clear var
+                 ContinuousPressChecker = 0; // clear var
+                 UserInputs_update(); // update positions if inputs are currently pressed, also set ContinuousPressChecker if they are
     }
 
-    if(BallUpdatePending)
+
+    if(GameUpdatePending)
     {
-     BallUpdatePending=0;
-     ball_update();
+        GameUpdatePending=0;
+     game_update();
     }
+
+
+
     if(LCDUpdatePending)
     {
         if(AI_enabled == 1)
@@ -134,7 +139,7 @@ void LCDInit(void)
 
 void GameIntroInit(){
 
-    ballStateInstance = INTRO; // Want to set this here so that during the ball_update() function it will show menu for play mode, e.g. 2player or 1 player vs AI, before play begins
+    gameStateInstance = INTRO; // Want to set this here so that during the game_update() function it will show menu for play mode, e.g. 2player or 1 player vs AI, before play begins
     p1Score = 0;
     p2Score = 0;
 }
@@ -144,7 +149,7 @@ void GameIntroInit(){
 void GameStartInit()
 {
  InputUpdatePending = 0;
- BallUpdatePending = 0;
+ GameUpdatePending = 0;
  LCDUpdatePending = 0;
 
  //Draw top, right and bottom walls
@@ -175,12 +180,14 @@ void GameStartInit()
  halLcdVLine(xR2 - 2, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
 
  yR1_old = yR1;
+ yR1_previousPosition = yR1;
  xR1_old = xR1;
  yR2_old = yR2;
+ yR2_previousPosition = yR2;
  xR2_old = xR2;
 
  //Initial state of the ball
- ballStateInstance = STARTING;
+ gameStateInstance = STARTING;
 
  // Set the winning score value
  winningScore = 3;
@@ -251,37 +258,6 @@ void LCD_update(void)
     * and vice versa for moving DOWN, rather than undrawing then drawing the entire racket(s) again.
     */
 
-     if(R1Dir == UP){
-        //clear old racket1 bottom line
-        halLcdHLine(xR1_old, xR1_old+3, yR1_previousPosition + HALF_RACKET_SIZE, PIXEL_OFF);
-        // draw new line on racket
-        halLcdHLine(xR1, xR1+3, yR1 - HALF_RACKET_SIZE, PIXEL_ON);
-     }
-     if(R1Dir == DOWN){
-        //clear old racket1 top line
-        halLcdHLine(xR1_old, xR1_old+3, yR1_previousPosition - HALF_RACKET_SIZE, PIXEL_OFF);
-        // draw new line on racket
-        halLcdHLine(xR1, xR1+3, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
-      }
-
-     if(R2Dir == UP){
-             //clear old racket2 bottom line
-             halLcdHLine(xR2_old, xR2_old-3, yR2_previousPosition + HALF_RACKET_SIZE, PIXEL_OFF);
-             // draw new line on racket
-             halLcdHLine(xR2, xR2-3, yR2 - HALF_RACKET_SIZE, PIXEL_ON);
-          }
-     if(R2Dir == DOWN){
-             //clear old racket2
-             halLcdHLine(xR2_old, xR2_old-3, yR2_previousPosition - HALF_RACKET_SIZE, PIXEL_OFF);
-             // draw new line on racket
-             halLcdHLine(xR2, xR2-3, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
-     }
-
-     xR1_old = xR1;
-     yR1_old = yR1;
-     xR2_old = xR2;
-     yR2_old = yR2;
-
      //Clear oldest ball
      halLcdCircle(xBall_old2, yBall_old2, BALL_RADIUS, PIXEL_OFF);
      halLcdPixel(xBall_old2, yBall_old2, PIXEL_OFF);
@@ -298,6 +274,37 @@ void LCD_update(void)
      yBall_old2=yBall_old;
      xBall_old=xBall;
      yBall_old=yBall;
+
+     if(R1Dir == UP){
+             //clear old racket1 bottom line
+             halLcdHLine(xR1_old, xR1_old+3, yR1_previousPosition + HALF_RACKET_SIZE, PIXEL_OFF);
+             // draw new line on racket
+             halLcdHLine(xR1, xR1+3, yR1 - HALF_RACKET_SIZE, PIXEL_ON);
+      }
+      if(R1Dir == DOWN){
+             //clear old racket1 top line
+             halLcdHLine(xR1_old, xR1_old+3, yR1_previousPosition - HALF_RACKET_SIZE, PIXEL_OFF);
+             // draw new line on racket
+             halLcdHLine(xR1, xR1+3, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
+      }
+
+      if(R2Dir == UP){
+                  //clear old racket2 bottom line
+                  halLcdHLine(xR2_old, xR2_old-3, yR2_previousPosition + HALF_RACKET_SIZE, PIXEL_OFF);
+                  // draw new line on racket
+                  halLcdHLine(xR2, xR2-3, yR2 - HALF_RACKET_SIZE, PIXEL_ON);
+      }
+      if(R2Dir == DOWN){
+                  //clear old racket2
+                  halLcdHLine(xR2_old, xR2_old-3, yR2_previousPosition - HALF_RACKET_SIZE, PIXEL_OFF);
+                  // draw new line on racket
+                  halLcdHLine(xR2, xR2-3, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
+      }
+
+          xR1_old = xR1;
+          yR1_old = yR1;
+          xR2_old = xR2;
+          yR2_old = yR2;
 
 }
 
@@ -379,17 +386,17 @@ __interrupt void TIMER1_A0_ISR(void)
 
 
 
- if(!BallUpdatePending) //if update still pending, skip this interval
+ if(!GameUpdatePending) //if update still pending, skip this interval
  {
-   Ball_intervals++;
-   if(Ball_intervals>=(BALL_INTERVAL_mS/TIMING_BASE_mS)) //time to run the ball update
+   Game_intervals++;
+   if(Game_intervals>=(GAME_INTERVAL_mS/TIMING_BASE_mS)) //time to run the ball update
    {
-     BallUpdatePending = 1; //warn the CPU that ball update is required
-     Ball_intervals = 0;
+     GameUpdatePending = 1; //warn the CPU that ball update is required
+     Game_intervals = 0;
    }
  }
 
- if(BallUpdatePending || LCDUpdatePending)
+ if(GameUpdatePending || LCDUpdatePending)
  {
      //keep CPU active after ISR to process updates in main loop
    __bic_SR_register_on_exit(LPM3_bits);
@@ -415,7 +422,7 @@ __interrupt void my_Port2_ISR(void)
     if((P2IFG & BIT7)) //SW2 pressed for DOWN
                 P2IFG &= ~BIT7; // interrupt serviced, clear corresponding interrupt flag
 
-    if(ballStateInstance == INTRO){
+    if(gameStateInstance == INTRO){
         if((!(P2IN & BIT4))) //JOYSTICK UP pressed
             AI_enabled = 0;
         if((!(P2IN & BIT5))) // JOYSTICK DOWN pressed
@@ -432,7 +439,7 @@ __interrupt void my_Port2_ISR(void)
         GameStartInit();
     }
 
-    if(ballStateInstance == SCORING){
+    if(gameStateInstance == SCORING){
         // Restart TimerA
         TimerA1Init();
 
@@ -443,7 +450,7 @@ __interrupt void my_Port2_ISR(void)
         GameStartInit();
     }
 
-    if(ballStateInstance == WINNING){
+    if(gameStateInstance == WINNING){
             // Restart TimerA
             TimerA1Init();
 

@@ -24,16 +24,18 @@
 #define TIMING_BASE_mS 5 //base timing interval for all timed execution
 #define LCD_INTERVAL_mS 40 //timing interval for updating LCD
 #define INPUT_INTERVAL_mS 100 //timing interval for reading inputs
-#define BALL_INTERVAL_mS 50 //timing interval for updating ball position
+#define GAME_INTERVAL_mS 50 //timing interval for updating ball position
 //flags marking when updates must be done
 volatile unsigned int InputUpdatePending;
-volatile unsigned int BallUpdatePending;
+volatile unsigned int GameUpdatePending;
 volatile unsigned int LCDUpdatePending;
 volatile unsigned int ContinuousPressChecker;
 
+//Game state
+enum gameState {INTRO,STARTING,MOVING,SCORING,WINNING};
+volatile enum gameState gameStateInstance; //Current game state
+
 //Ball handling
-enum ballState {INTRO,STARTING,MOVING,SCORING,WINNING};
-volatile enum ballState ballStateInstance; //Current ball state
 volatile int xBall, yBall; //Current ball position
 volatile int xBall_old, yBall_old; //For ball trail position
 volatile int xBall_old2, yBall_old2; //To delete old ball position
