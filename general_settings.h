@@ -42,6 +42,9 @@ volatile unsigned int ContinuousPressChecker;
 enum gameState {INTRO,STARTING,MOVING,SCORING,WINNING};
 volatile enum gameState gameStateInstance; //Current game state
 
+// Banner handling
+volatile char bannerString[17];
+
 //Ball handling
 volatile int xBall, yBall; //Current ball position
 volatile int xBall_old, yBall_old; //For ball trail position
@@ -69,7 +72,7 @@ volatile char scoreString[14];
 volatile char currentScoresString[15];
 volatile char winningString[13];
 volatile int winningScore;
-volatile char scoresBannerString[6];
+
 
 volatile enum PlayerEnum Scorer;
 volatile enum PlayerEnum Player;
@@ -85,6 +88,7 @@ volatile int bonusDrawn; // for wether to redraw the bonus
 volatile int bonusX, bonusY; // Position of the bonus on the screen
 // player1 projectile handling
 volatile int p1bonusEnabled; // bonus enabled or not for this player
+volatile int p1bonusCooldown;
 volatile int p1Projectiles_onscreen;
 volatile int p1Projectiles_active;
 volatile int p1Projectiles_pressed;
@@ -94,6 +98,7 @@ volatile int p1ProjectileA_X_old2, p1ProjectileA_Y_old2,p1ProjectileB_X_old2, p1
 volatile int p1_projectileA_x_displacement,p1_projectileB_x_displacement; // to set x_displacement of projectiles
 //player2 projectile handling
 volatile int p2bonusEnabled; // bonus enabled or not for this player
+volatile int p2bonusCooldown;
 volatile int p2Projectiles_onscreen;
 volatile int p2Projectiles_active;
 volatile int p2ProjectileX, p2ProjectileY; //Current projectile position

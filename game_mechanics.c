@@ -18,9 +18,9 @@
 
 int top_wall_reached()
 {
-    if(yBall <= (BALL_RADIUS+10) ) //top wall reached
+    if(yBall <= (BALL_RADIUS+12) ) //top wall reached
     {
-        yBall = 1+BALL_RADIUS+10; //do not overwrite the wall
+        yBall = 1+BALL_RADIUS+12; //do not overwrite the wall
         return 1;
     }
     else return 0;
@@ -171,8 +171,8 @@ void clearProjectiles(){
 
 void resetProjectiles(){
 
-    // Set projectile A position to start at the top gun of racket1
-    p1ProjectileA_X = xR1+10;
+    // Set projectile A position off screen for now so as to not interfere with the ball
+    p1ProjectileA_X = xR1-10;
     p1ProjectileA_Y = yR1 - HALF_RACKET_SIZE;
 
 
@@ -183,8 +183,8 @@ void resetProjectiles(){
     p1ProjectileA_Y_old2 = p1ProjectileA_Y;
 
 
-    // Set projectile B position to start at the bottom gun of racket1
-                                p1ProjectileB_X = xR1+10;
+    // Set projectile B position off screen for now so as to not interfere with the ball
+                                p1ProjectileB_X = xR1-10;
                                 p1ProjectileB_Y = yR1 + HALF_RACKET_SIZE;
 
 
@@ -198,14 +198,38 @@ void resetProjectiles(){
     p1Projectiles_onscreen = 0;
 }
 
-void updateScoresBannerString(volatile char* scoresBannerString,int p1score, int p2score){
+// Place projectiles at racket cannons ready to move
+void powerUpProjectiles(){
 
-    scoresBannerString[0] = p1score+'0';
-    scoresBannerString[1] = ' ';
-    scoresBannerString[2] = ':';
-    scoresBannerString[3] = ' ';
-    scoresBannerString[4] = p2score+'0';
-    scoresBannerString[5] = '\0';
+    p1ProjectileA_X = xR1+10;
+    p1ProjectileB_X = xR1+10;
+}
+
+void updateBannerString(volatile char* bannerString,int p1score, int p2score, int p1bonusEnabled, int p2bonusEnabled){
+
+    if(p1bonusEnabled == 1)
+        bannerString[0] = 'B';
+    else
+        bannerString[0] = ' ';
+    bannerString[1] = ' ';
+    bannerString[2] = 'P';
+    bannerString[3] = '1';
+    bannerString[4] = ':';
+    bannerString[5] = p1score+'0';
+    bannerString[6] = ' ';
+    bannerString[7] = 'v';
+    bannerString[8] = 's';
+    bannerString[9] = ' ';
+    bannerString[10] = 'P';
+    bannerString[11] = '2';
+    bannerString[12] = ':';
+    bannerString[13] = p2score+'0';
+    bannerString[14] = ' ';
+    if(p2bonusEnabled == 1)
+        bannerString[15] = 'B';
+    else
+        bannerString[15] = ' ';
+    bannerString[16] = '\0';
 }
 
 // Constructs the winning score string, later printed to LCD
@@ -293,16 +317,23 @@ void game_update(void)
 
                     if(LastHitterInstance ==  P1){ //player1 struck ball last
                         p1bonusEnabled = 1;
+                        p1bonusCooldown = 2;
                          // don't draw the bonus now that it has been claimed
                     }
                     if(LastHitterInstance ==  P2){ // player2 or AI struck ball last
                         p2bonusEnabled = 1;
+                        p2bonusCooldown = 2;
                          // don't draw the bonus now that it has been claimed
                     }
+
+            // Also update the banner to show that bonus has been picked up
+            updateBannerString(bannerString,p1Score,p2Score,p1bonusEnabled,p2bonusEnabled);
+            halLcdPrintLine(bannerString, 0, OVERWRITE_TEXT);//PRINT MESSAGE
           }
 
         break;
     case PICKEDUP:
+
 
         // If the ball meets the projectile, destroy projectile, then flip the ball x and y directions
         if(
@@ -317,10 +348,13 @@ void game_update(void)
                       &&
                       ( yBall >= ( p1ProjectileA_Y - (PROJECTILE_HALF_SIZE << 2)  ) )
                )
+               &&
+               (p1Projectiles_onscreen = 1)
           ){
             p1ProjectileA_X = LCD_COL+10; //set to just off screen to avoid affecting the ball anymore this time around
 
             clearProjectiles();
+            p1Projectiles_onscreen = 0;
 
 
             x_displacement *= -1;
@@ -348,6 +382,8 @@ void game_update(void)
             y_displacement *- -1;
         }
         break;
+    case OUTOFPLAY:
+
     }
 
  //calculate new position and bouncing
@@ -394,7 +430,7 @@ void game_update(void)
 
       if(yR1 > (LCD_ROW >> 1)){
           yR1_previousPosition = yR1;
-          yR1 -= 1; //move racket 1 pixels down
+          yR1 -= 1; //move racket 1 pixels up
           R1Dir = UP;
       }
 
@@ -406,8 +442,27 @@ void game_update(void)
 
       if(yR2 > (LCD_ROW >> 1)){
           yR2_previousPosition = yR2;
-          yR2 -= 1; //move racket 1 pixels down
+          yR2 -= 1; //move racket 1 pixels up
           R2Dir = UP;
+      }
+
+      // When rackets are back in starting position, redraw them
+      if( (yR1 == ( LCD_ROW >> 1 ) ) && (yR2 == (LCD_ROW >> 1 ) ) ){
+
+          halLcdPrintXY( "                ", 10, 80, OVERWRITE_TEXT);
+          //halLcdPrintLine("                     ", 6, OVERWRITE_TEXT);//PRINT blanks where scorer was printed
+
+          //Draw new racket1
+          halLcdVLine(xR1, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
+          halLcdVLine(xR1 + 1, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
+          //halLcdVLine(xR1 + 2, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
+
+          //Draw new racket2
+          halLcdVLine(xR2, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
+          halLcdVLine(xR2 - 1, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
+
+
+
       }
 
        // Initial position of the ball
@@ -417,8 +472,9 @@ void game_update(void)
               x_displacement = +1; // if not set, set to +1 to give an initial direction of travel
           y_displacement = 0;
 
-          //updateScoresBannerString(scoresBannerString,p1Score,p2Score);
-          //halLcdPrintLine(scoresBannerString, 0, OVERWRITE_TEXT);//PRINT MESSAGE
+          updateBannerString(bannerString,p1Score,p2Score,p1bonusEnabled,p2bonusEnabled);
+          halLcdPrintLine(bannerString, 0, OVERWRITE_TEXT);//PRINT MESSAGE
+
           //halLcdPrintLine("some scores", 1, OVERWRITE_TEXT);//PRINT MESSAGE
           if( (yR1 == (LCD_ROW >> 1)) && (yR2 == (LCD_ROW >> 1)) ) // if rackets in the correct starting position, proceed to next game state
               gameStateInstance = MOVING; // begin moving
@@ -429,14 +485,16 @@ void game_update(void)
          // first do projectiles if they are active....
       if(p1bonusEnabled && p1Projectiles_active){
 
-          if( (p1Projectiles_pressed == 1) || (p1Projectiles_onscreen == 0) ) // if not on screen yet, give a starting position. Also resets start position if trigger is pressed again
+          if( (p1Projectiles_pressed == 1) /*|| (p1Projectiles_onscreen == 0)*/ ) // if not on screen yet, give a starting position. Also resets start position if trigger is pressed again
           {
               clearProjectiles();
               resetProjectiles();
+              powerUpProjectiles(); // This should only happen when trigger is pressed.
 
               p1Projectiles_pressed = 0; // Clear the pressed variable
               p1Projectiles_onscreen = 1; // Set variable to mark that player1 projectiles are now on-screen
           }
+
 
           // Move p1 projectile A position
           p1ProjectileA_X = p1ProjectileA_X + p1_projectileA_x_displacement;
@@ -511,36 +569,61 @@ void game_update(void)
           //halLcdClearScreen(); //CLEAR SCREEN
           switch(Scorer){
           case PLAYER1:
-              if(p1Score == bonusScore){// check if player score has reached the bonus score
-                  BonusStatus = INPLAY;// set bonus to be in play
-              }
 
-              if(p1Score >= winningScore){
+              if(p1Score == winningScore){
                   updateWinningScoreString(winningString,1);
                   halLcdPrintLine(winningString, 2, OVERWRITE_TEXT);//PRINT MESSAGE
                   gameStateInstance = WINNING;
               }
               else{
+                  if(p1Score == bonusScore){// check if player score has reached the bonus score
+                      BonusStatus = INPLAY;// set bonus to be in play
+                  }
+                  if(p2bonusCooldown > 0){ // decrement player2 bonus cooldown if opponent scores
+                      p2bonusCooldown--;
+                  }
+                  else{ // switch off player2 bonus
+                      p2bonusEnabled = 0;
+                  }
                   //halLcdPrintLine(scoreString, 1, OVERWRITE_TEXT);//PRINT current scorer as scoring a goal
-                  updateScoresBannerString(scoresBannerString,p1Score,p2Score);
-                  halLcdPrintLine(scoresBannerString, 0, OVERWRITE_TEXT);//PRINT MESSAGE
+                  updateBannerString(bannerString,p1Score,p2Score,p1bonusEnabled,p2bonusEnabled);
+                  halLcdPrintLine(bannerString, 0, OVERWRITE_TEXT);//PRINT MESSAGE
+                  halLcdPrintLine(winningString, 2, OVERWRITE_TEXT);//PRINT MESSAGE
+
+                  updateScoreString(scoreString,1);
+                  halLcdPrintXY( scoreString, 10, 80, OVERWRITE_TEXT);
+                  //halLcdPrintLine(scoreString, 6, OVERWRITE_TEXT);//PRINT current scorer as scoring a goal
+
                   gameStateInstance = STARTING;
                   //halLcdPrintLine("some p1 scores", 1, OVERWRITE_TEXT);//PRINT MESSAGE
               }
               break;
           case PLAYER2:
-              if(p2Score == bonusScore){// check if player score has reached the bonus score
-                  BonusStatus = INPLAY; // set bonus to be in play
-              }
-              if(p2Score >= winningScore){
+
+              if(p2Score == winningScore){
                   updateWinningScoreString(winningString,2);
                   halLcdPrintLine(winningString, 2, OVERWRITE_TEXT);//PRINT MESSAGE
                   gameStateInstance = WINNING;
               }
               else{
-                  //halLcdPrintLine(scoreString, 2, OVERWRITE_TEXT);//PRINT current scorer as scoring a goal
-                  updateScoresBannerString(scoresBannerString,p1Score,p2Score);
-                  halLcdPrintLine(scoresBannerString, 0, OVERWRITE_TEXT);//PRINT MESSAGE
+
+                  if(p2Score == bonusScore){// check if player score has reached the bonus score
+                     BonusStatus = INPLAY; // set bonus to be in play
+                  }
+                  if(p1bonusCooldown > 0){ // decrement player1 bonus cooldown if opponent scores
+                     p1bonusCooldown--;
+                  }
+                  else{ // switch off player1 bonus
+                      p1bonusEnabled = 0;
+                  }
+
+                  updateBannerString(bannerString,p1Score,p2Score,p1bonusEnabled,p2bonusEnabled);
+                  halLcdPrintLine(bannerString, 0, OVERWRITE_TEXT);//PRINT MESSAGE
+
+                  updateScoreString(scoreString,2);
+                  halLcdPrintXY( scoreString, 10, 80, OVERWRITE_TEXT);
+                  //halLcdPrintLine(scoreString, 6, OVERWRITE_TEXT);//PRINT current scorer as scoring a goal
+
                   gameStateInstance = STARTING;
                   //halLcdPrintLine("some p2 scores", 1, OVERWRITE_TEXT);//PRINT MESSAGE
               }
@@ -553,12 +636,12 @@ void game_update(void)
 
           case WINNING:
 
-              halLcdPrintLine("        ", 0, OVERWRITE_TEXT);//PRINT MESSAGE
+              halLcdPrintLine("   GAME OVER    ", 0, OVERWRITE_TEXT);//Overwrite banner with 'GAME OVER'
               updateCurrentScoresString(currentScoresString,p1Score,p2Score); // Update the current scores string with current player scores
-              halLcdPrintLine(currentScoresString,3,OVERWRITE_TEXT);  // print to LCD
+              halLcdPrintLine(currentScoresString,4,OVERWRITE_TEXT);  // print to LCD
 
-              halLcdPrintLine(" Press an input   or Reset btn", 4, OVERWRITE_TEXT);//PRINT MESSAGE
-              halLcdPrintLine(" to continue", 6, OVERWRITE_TEXT);//PRINT MESSAGE
+              halLcdPrintLine(" Press an input   or Reset btn", 5, OVERWRITE_TEXT);//PRINT MESSAGE
+              halLcdPrintLine(" to continue", 7, OVERWRITE_TEXT);//PRINT MESSAGE
 
 
           //TimerB0Init(); // initialise timerB as a way of providing a timeout and preventing further interrupts for some time

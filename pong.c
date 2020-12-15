@@ -113,7 +113,7 @@ void main(void)
 
 void ai_movement(void){
 
-    if( (yR2 > HALF_RACKET_SIZE) && (yR2 > yBall) ){ // if AI racket not hitting top wall, and also lower than the ball, move racket up
+    if( (yR2 > (HALF_RACKET_SIZE+12)) && (yR2 > yBall) ){ // if AI racket not hitting top wall, and also lower than the ball, move racket up
         yR2_previousPosition = yR2;
         yR2 -= 1; //move racket 1 pixels up
         R2Dir = UP;
@@ -142,8 +142,10 @@ void GameIntroInit(){
     gameStateInstance = INTRO; // Want to set this here so that during the game_update() function it will show menu for play mode, e.g. 2player or 1 player vs AI, before play begins
     p1Score = 0;
     p1bonusEnabled = 0;
+    p1bonusCooldown = 0;
     p2Score = 0;
     p2bonusEnabled = 0;
+    p2bonusCooldown = 0;
     BonusStatus = OUTOFPLAY;
     LastHitterInstance = P1;
 }
@@ -152,70 +154,67 @@ void GameIntroInit(){
 //Most variables are  declared into general_settings.h
 void GameStartInit()
 {
- InputUpdatePending = 0;
- GameUpdatePending = 0;
- LCDUpdatePending = 0;
+     InputUpdatePending = 0;
+     GameUpdatePending = 0;
+     LCDUpdatePending = 0;
 
- // draw top wall
- halLcdHLine(0,LCD_COL,10,PIXEL_ON);
+     // draw top wall
+     halLcdHLine(0,LCD_COL,12,PIXEL_ON);
 
- //
+     //Initial position of racket 1
+     xR1 = 0; //left-hand side
+     yR1 = LCD_ROW >> 1; //middle row
+     xR1_old = xR1;
+     yR1_old = yR1;
 
- //Initial position of racket 1
- xR1 = 0; //left-hand side
- yR1 = LCD_ROW >> 1; //middle row
- xR1_old = xR1;
- yR1_old = yR1;
+     //Initial position of racket 2
+     xR2 = LCD_COL - 1; //right-hand side
+     yR2 = LCD_ROW >> 1; //middle row
+     xR2_old = xR2;
+     yR2_old = yR2;
 
- //Initial position of racket 2
- xR2 = LCD_COL - 1; //right-hand side
- yR2 = LCD_ROW >> 1; //middle row
- xR2_old = xR2;
- yR2_old = yR2;
+     //Draw new racket1
+     halLcdVLine(xR1, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
+     halLcdVLine(xR1 + 1, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
+     //halLcdVLine(xR1 + 2, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
 
- //Draw new racket1
- halLcdVLine(xR1, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
- halLcdVLine(xR1 + 1, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
- //halLcdVLine(xR1 + 2, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
-
- //Draw new racket2
- halLcdVLine(xR2, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
- halLcdVLine(xR2 - 1, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
- //halLcdVLine(xR2 - 2, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
+     //Draw new racket2
+     halLcdVLine(xR2, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
+     halLcdVLine(xR2 - 1, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
+     //halLcdVLine(xR2 - 2, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
 
 
 
- yR1_old = yR1;
- //yR1_previousPosition = yR1;
- xR1_old = xR1;
- yR2_old = yR2;
- //yR2_previousPosition = yR2;
- xR2_old = xR2;
+     yR1_old = yR1;
+     //yR1_previousPosition = yR1;
+     xR1_old = xR1;
+     yR2_old = yR2;
+     //yR2_previousPosition = yR2;
+     xR2_old = xR2;
 
- R1Dir = STOP;
- R2Dir = STOP;
+     R1Dir = STOP;
+     R2Dir = STOP;
 
- //Bonus initialisation
+     //Bonus initialisation
 
- bonusScore = 1;
- bonusDrawn = 0;
- p1Projectiles_onscreen = 0;
- p2Projectiles_onscreen = 0;
- p1Projectiles_active = 0;
- p2Projectiles_active = 0;
+     bonusScore = 1;
+     bonusDrawn = 0;
+     p1Projectiles_onscreen = 0;
+     p2Projectiles_onscreen = 0;
+     p1Projectiles_active = 0;
+     p2Projectiles_active = 0;
 
- p1_projectileA_x_displacement = +2; // move to the right
- p1_projectileB_x_displacement = +2; // move to the right
+     p1_projectileA_x_displacement = +2; // move to the right
+     p1_projectileB_x_displacement = +2; // move to the right
 
- p2_projectileA_x_displacement = -1; // move to the left
- p2_projectileB_x_displacement = -1; // move to the left
+     p2_projectileA_x_displacement = -1; // move to the left
+     p2_projectileB_x_displacement = -1; // move to the left
 
- //Initial state of the ball
- gameStateInstance = STARTING;
+     //Initial state of the ball
+     gameStateInstance = STARTING;
 
- // Set the winning score value
- winningScore = 3;
-
+     // Set the winning score value
+     winningScore = 5;
 }
 
 //Read user inputs here (CPU is awaken by ADC12 conversion)
@@ -240,7 +239,7 @@ void UserInputs_update(void)
     }
     if(!(P2IN & BIT4)){ //UP pressed for Player1
         ContinuousPressChecker = 1; // Continue to check if this is continously held down
-        if (yR1 > (HALF_RACKET_SIZE+10)) //avoid overwriting top wall
+        if (yR1 > (HALF_RACKET_SIZE+12)) //avoid overwriting top wall
         {
            yR1_previousPosition = yR1;
            yR1 -= 1; //move racket 1 pixel up
@@ -261,7 +260,7 @@ void UserInputs_update(void)
     if(!(P2IN & BIT6)) //SW1 pressed for UP for Player2
     {
           ContinuousPressChecker = 1; // Continue to check if this is continously held down
-          if (yR2 > (HALF_RACKET_SIZE+10)) //avoid overwriting top wall
+          if (yR2 > (HALF_RACKET_SIZE+12)) //avoid overwriting top wall
           {
               yR2_previousPosition = yR2;
               yR2 -= 1; //move racket 1 pixels up
