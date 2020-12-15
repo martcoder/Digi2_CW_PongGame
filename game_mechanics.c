@@ -164,10 +164,18 @@ void racket_movement_effect(int player){
             }
         }
         // for a moving racket, instead of using racket zones, use the direction of racket movement to add to the ball's movement in the same direction
-        if(yR2_old < yR2) // racket is moving down
-           y_displacement = y_displacement+1; // move ball downward too
-        if(yR2_old > yR2) // racket is moving up
-           y_displacement = y_displacement-1; // move ball upward too
+        if(AI_enabled){
+            if(toggle_AI_direction > 0)
+                y_displacement = y_displacement-1; // move ball upward too
+            if(toggle_AI_direction < 0)
+                y_displacement = y_displacement+1; // move ball downward too
+        }
+        else{
+            if(yR2_old < yR2) // racket is moving down
+               y_displacement = y_displacement+1; // move ball downward too
+            if(yR2_old > yR2) // racket is moving up
+               y_displacement = y_displacement-1; // move ball upward too
+        }
     }
 }
 
@@ -567,6 +575,8 @@ void game_update(void)
               LastHitterInstance = P1;
               x_displacement = +1; // 'bounce' the ball off the racket and keep it moving toward opposite side
               racket_movement_effect(1); // check to see if racket is moving or not, and add to the ball's direction displacement depending on this
+              if(AI_enabled) // if AI is playing, change it's hitting movement direction
+                                toggle_AI_direction /*= toggle_AI_direction;*/  *= -1;
           }
 
           // Check ball against player2 bonus racket
@@ -574,6 +584,7 @@ void game_update(void)
               if(P2_bonus_racket_hit()){
                   LastHitterInstance = P2;
                   x_displacement = -1;// 'bounce' the ball off the racket and keep it moving toward opposite side
+
               }
           }
 
@@ -581,6 +592,7 @@ void game_update(void)
               LastHitterInstance = P2;
               x_displacement = -1;// 'bounce' the ball off the racket and keep it moving toward opposite side
               racket_movement_effect(2); // check to see if racket is moving or not, and add to the ball's direction displacement depending on this
+
           }
 
           //check left and right wall strikes
@@ -599,6 +611,7 @@ void game_update(void)
               updateScoreString(scoreString,1); // Update the score string with the latest player who scored
               gameStateInstance = SCORING;
               x_displacement = +1; // When play restarts ball will go toward P1
+
           }
 
           break;

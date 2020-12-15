@@ -111,21 +111,7 @@ void main(void)
   }   	  
 }
 
-void ai_movement(void){
 
-    if( (yR2 > (HALF_RACKET_SIZE+12)) && (yR2 > yBall) ){ // if AI racket not hitting top wall, and also lower than the ball, move racket up
-        yR2_previousPosition = yR2;
-        yR2 -= 1; //move racket 1 pixels up
-        R2Dir = UP;
-        return;
-    }
-    if( (yR2 < (LCD_ROW - HALF_RACKET_SIZE)) && (yR2 < yBall) ){ // if AI racket not hitting bottom wall, and also higher than ball, move racket down
-        yR2_previousPosition = yR2;
-        yR2 += 1; //move racket 1 pixels down
-        R2Dir = DOWN;
-        return;
-    }
-}
 
 //LCD initialization
 void LCDInit(void)
@@ -140,6 +126,9 @@ void LCDInit(void)
 void GameIntroInit(){
 
     gameStateInstance = INTRO; // Want to set this here so that during the game_update() function it will show menu for play mode, e.g. 2player or 1 player vs AI, before play begins
+    toggle_AI_direction = +1;
+    newPositionsDrawn = 0;
+    newAIPositionsDrawn = 0;
     p1Score = 0;
     p1bonusEnabled = 0;
     p1bonusCooldown = 0;
@@ -214,9 +203,77 @@ void GameStartInit()
 
 }
 
+void ai_movement(void){
+    if(newAIPositionsDrawn ==1){
+        newAIPositionsDrawn = 0;
+
+        if( (xBall < (LCD_COL - 6)) && (yR2 > (HALF_RACKET_SIZE+13)) && (yR2 > yBall) ){ // if AI racket not hitting top wall, and also lower than the ball, move racket up, unless ball is close to racket
+            yR2_previousPosition = yR2;
+            //yR2_old = yR2;
+            yR2 -= 1; //move racket 1 pixels up
+            R2Dir = UP;
+
+            if(p2bonusEnabled == 1){
+                          if ( yR2bonus < (LCD_ROW - QUARTER_RACKET_SIZE)  ) //avoid going lower than bottom of LCD
+                          {
+                              yR2bonus_previousPosition = yR2bonus;
+                              //yR2bonus_old = yR2bonus;
+                              yR2bonus += 1; //move racket 1 pixels down (opposite of player2 standard racket)
+                          }
+                          R2bonusDir = DOWN;
+            }
+
+            return;
+        }
+        if( (xBall < (LCD_COL - 6)) && (yR2 < (LCD_ROW - HALF_RACKET_SIZE)) && (yR2 < yBall) ){ // if AI racket not hitting bottom wall, and also higher than ball, move racket down, unless ball is close to racket
+            yR2_previousPosition = yR2;
+            //yR2_old = yR2;
+            yR2 += 1; //move racket 1 pixels down
+            R2Dir = DOWN;
+
+            if(p2bonusEnabled == 1){
+              if ( yR2bonus > (QUARTER_RACKET_SIZE + 13)  ) //avoid going higher than top wall
+              {
+                                      yR2bonus_previousPosition = yR2bonus;
+                                      //yR2bonus_old = yR2bonus;
+                                      yR2bonus -= 1; //move racket 1 pixels up (opposite of player2 standard racket)
+              }
+              R2bonusDir = UP;
+            }
+
+            return;
+        }
+        // 'human movement' if ball is close to the racket
+        if(xBall > (LCD_COL - 6) && (yR2 > (HALF_RACKET_SIZE+13)) ){
+            if(toggle_AI_direction > 0){
+                yR2_previousPosition = yR2;
+                //yR2_old = yR2;
+                yR2 -= 1; //move racket 1 pixels up
+                R2Dir = UP;
+                return;
+            }
+         if( (xBall > (LCD_COL - 6)) && (yR2 < (LCD_ROW - HALF_RACKET_SIZE)))
+         {
+             if(toggle_AI_direction < 0){
+                yR2_previousPosition = yR2;
+                //yR2_old = yR2;
+                yR2 += 1; //move racket 1 pixels down
+                R2Dir = DOWN;
+                return;
+             }
+          }
+
+
+        }
+    }
+}
+
 //Read user inputs here (CPU is awaken by ADC12 conversion)
 void UserInputs_update(void)
 {
+  if(newPositionsDrawn == 1){
+
+    newPositionsDrawn = 0;
 
     ContinuousPressChecker = 0; // This will be set below if an input is being pressed
     R1Dir = STOP;
@@ -236,7 +293,7 @@ void UserInputs_update(void)
     }
     if(!(P2IN & BIT4)){ //UP pressed for Player1
         ContinuousPressChecker = 1; // Continue to check if this is continously held down
-        if (yR1 > (HALF_RACKET_SIZE+12)) //avoid overwriting top wall
+        if (yR1 > (HALF_RACKET_SIZE+13)) //avoid overwriting top wall
         {
            yR1_previousPosition = yR1;
            yR1 -= 1; //move racket 1 pixel up
@@ -257,7 +314,7 @@ void UserInputs_update(void)
     if(!(P2IN & BIT6)) //SW1 pressed for UP for Player2
     {
           ContinuousPressChecker = 1; // Continue to check if this is continously held down
-          if (yR2 > (HALF_RACKET_SIZE+12)) //avoid overwriting top wall
+          if (yR2 > (HALF_RACKET_SIZE+13)) //avoid overwriting top wall
           {
               yR2_previousPosition = yR2;
               yR2 -= 1; //move racket 1 pixels up
@@ -298,11 +355,15 @@ void UserInputs_update(void)
 
           return;
      }
+
+  }
 }
 
 //Update drawings in LCD screen (CPU is awaken by TimerA1 interval ints)
 void LCD_update(void)
 {
+
+
 
      /*update older positions to clear old rackets and draw new ones
     * NB: this has been optimised to only draw the new top line and undraw the old bottom line for moving UP,
@@ -466,6 +527,9 @@ void LCD_update(void)
               xR2bonus_old = xR2bonus;
               yR2bonus_old = yR2bonus;
           }
+
+          newPositionsDrawn = 1;
+          newAIPositionsDrawn = 1;
 }
 
 /*********************************************************

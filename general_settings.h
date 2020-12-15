@@ -41,6 +41,8 @@ volatile unsigned int ContinuousPressChecker;
 //Game state
 enum gameState {INTRO,STARTING,MOVING,SCORING,WINNING};
 volatile enum gameState gameStateInstance; //Current game state
+volatile int newPositionsDrawn;
+volatile int newAIPositionsDrawn;
 
 // Banner handling
 volatile char bannerString[17];
@@ -80,6 +82,7 @@ volatile enum PlayerEnum Player;
 
 //AI handling
 volatile int AI_enabled;
+volatile int toggle_AI_direction;
 
 //Bonus handling
 enum BonusFSM {INPLAY,PICKEDUP,OUTOFPLAY};
