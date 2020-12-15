@@ -64,6 +64,9 @@ void main(void)
   // Initialise Game Intro variables
   GameIntroInit();
 
+  // Set game state to starting up
+  GameLoadInit();
+
 
   while(1) //infinite main loop
   {
@@ -121,6 +124,10 @@ void LCDInit(void)
  halLcdSetBackLight(LCD_BACKLIGHT_LEVEL);
  halLcdSetContrast(LCD_CONTRAST_LEVEL);
  halLcdClearScreen();
+}
+
+void GameLoadInit(){
+    gameStateInstance = LOADING;
 }
 
 void GameIntroInit(){
@@ -684,6 +691,8 @@ __interrupt void my_Port2_ISR(void)
     if((P2IFG & BIT7)) //SW2 pressed for DOWN
                 P2IFG &= ~BIT7; // interrupt serviced, clear corresponding interrupt flag
 
+
+
     if(gameStateInstance == INTRO){
         if((!(P2IN & BIT4))) //JOYSTICK UP pressed
             AI_enabled = 0;
@@ -728,6 +737,23 @@ __interrupt void my_Port2_ISR(void)
             GameIntroInit();
 
         }
+
+    if(gameStateInstance == LOADING){
+
+            if((!(P2IN & BIT4))){ //JOYSTICK UP pressed
+
+
+                // Restart TimerA
+                TimerA1Init();
+
+                // Clear LCD
+                LCDInit();
+
+                // Initialise and start game intro
+                GameIntroInit();
+
+            }
+    }
 
 
     /* Don't keep CPU awake to process the input, instead wait for TimerA interrupt to wake CPU
