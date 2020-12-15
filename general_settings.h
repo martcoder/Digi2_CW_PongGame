@@ -20,6 +20,12 @@
 #define QUARTER_RACKET_SIZE 8
 #define BALL_RADIUS 1 //ball radius in pixels
 
+#define PROJECTILE_HALF_SIZE 2 // projectile radius in pixels
+#define BONUS_RADIUS 5 // bonus radius in pixels
+#define BONUS_APPEAR_X 60
+#define BONUS_APPEAR_Y 30
+
+
 //Timing intervals for the game
 #define TIMING_BASE_mS 5 //base timing interval for all timed execution
 #define LCD_INTERVAL_mS 40 //timing interval for updating LCD
@@ -27,6 +33,7 @@
 #define GAME_INTERVAL_mS 50 //timing interval for updating ball position
 //flags marking when updates must be done
 volatile unsigned int InputUpdatePending;
+volatile unsigned int InterruptTimeoutPending;
 volatile unsigned int GameUpdatePending;
 volatile unsigned int LCDUpdatePending;
 volatile unsigned int ContinuousPressChecker;
@@ -44,6 +51,8 @@ volatile int y_displacement;
 
 //Racket handling
 enum VDir {STOP, UP, DOWN}; //last racket movement vertical directions
+enum LastHitter {P1,P2};
+volatile enum LastHitter LastHitterInstance;
 
 //Racket1's variables
 volatile int xR1, yR1, xR2, yR2; //Current racket 1 and racket 2 positions
@@ -66,5 +75,30 @@ volatile enum PlayerEnum Player;
 
 //AI handling
 volatile int AI_enabled;
+
+//Bonus handling
+enum BonusFSM {INPLAY,PICKEDUP,OUTOFPLAY};
+volatile enum BonusFSM BonusStatus;
+volatile int bonusScore; // the score at which the bonus will appear
+volatile int bonusDrawn; // for wether to redraw the bonus
+volatile int bonusX, bonusY; // Position of the bonus on the screen
+// player1 projectile handling
+volatile int p1bonusEnabled; // bonus enabled or not for this player
+volatile int p1Projectiles_onscreen;
+volatile int p1Projectiles_active;
+volatile int p1Projectiles_pressed;
+volatile int p1ProjectileA_X, p1ProjectileA_Y,p1ProjectileB_X, p1ProjectileB_Y; //Current projectile positions
+volatile int p1ProjectileA_X_old, p1ProjectileA_Y_old,p1ProjectileB_X_old, p1ProjectileB_Y_old; //For projectile previous positions
+volatile int p1ProjectileA_X_old2, p1ProjectileA_Y_old2,p1ProjectileB_X_old2, p1ProjectileB_Y_old2; //To delete old projectile positions
+volatile int p1_projectileA_x_displacement,p1_projectileB_x_displacement; // to set x_displacement of projectiles
+//player2 projectile handling
+volatile int p2bonusEnabled; // bonus enabled or not for this player
+volatile int p2Projectiles_onscreen;
+volatile int p2Projectiles_active;
+volatile int p2ProjectileX, p2ProjectileY; //Current projectile position
+volatile int p2ProjectileX_old, p2ProjectileY_old; //For projectile trail position
+volatile int p2ProjectileX_old2, p2ProjectileY_old2; //To delete old projectile position
+volatile int p2_projectileA_x_displacement,p2_projectileB_x_displacement; // to set x_displacement of projectile
+
 
 #endif /* GENERAL_SETTINGS_H_ */

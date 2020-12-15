@@ -141,7 +141,11 @@ void GameIntroInit(){
 
     gameStateInstance = INTRO; // Want to set this here so that during the game_update() function it will show menu for play mode, e.g. 2player or 1 player vs AI, before play begins
     p1Score = 0;
+    p1bonusEnabled = 0;
     p2Score = 0;
+    p2bonusEnabled = 0;
+    BonusStatus = OUTOFPLAY;
+    LastHitterInstance = P1;
 }
 
 //This function can be used to initialize game variables at boot-up
@@ -167,28 +171,43 @@ void GameStartInit()
  //Draw new racket1
  halLcdVLine(xR1, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
  halLcdVLine(xR1 + 1, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
- halLcdVLine(xR1 + 2, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
+ //halLcdVLine(xR1 + 2, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
 
  //Draw new racket2
  halLcdVLine(xR2, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
  halLcdVLine(xR2 - 1, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
- halLcdVLine(xR2 - 2, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
+ //halLcdVLine(xR2 - 2, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
 
  yR1_old = yR1;
- yR1_previousPosition = yR1;
+ //yR1_previousPosition = yR1;
  xR1_old = xR1;
  yR2_old = yR2;
- yR2_previousPosition = yR2;
+ //yR2_previousPosition = yR2;
  xR2_old = xR2;
 
  R1Dir = STOP;
  R2Dir = STOP;
 
+ //Bonus initialisation
+
+ bonusScore = 1;
+ bonusDrawn = 0;
+ p1Projectiles_onscreen = 0;
+ p2Projectiles_onscreen = 0;
+ p1Projectiles_active = 0;
+ p2Projectiles_active = 0;
+
+ p1_projectileA_x_displacement = +2; // move to the right
+ p1_projectileB_x_displacement = +2; // move to the right
+
+ p2_projectileA_x_displacement = -1; // move to the left
+ p2_projectileB_x_displacement = -1; // move to the left
+
  //Initial state of the ball
  gameStateInstance = STARTING;
 
  // Set the winning score value
- winningScore = 3;
+ winningScore = 9;
 
 }
 
@@ -222,6 +241,15 @@ void UserInputs_update(void)
         R1Dir = UP;
         return;
     }
+
+    if(!(P2IN & BIT2)){ //RIGHT pressed for Player1, this means FIRE projectile when bonus enabled for this player
+            //ContinuousPressChecker = 1; // Continue to check if this is continously held down
+            // Make this player's projectiles active!!!
+            p1Projectiles_pressed = 1;
+            p1Projectiles_active = 1;
+
+            return;
+        }
 
     if(!(P2IN & BIT6)) //SW1 pressed for UP for Player2
     {
@@ -273,30 +301,118 @@ void LCD_update(void)
      xBall_old=xBall;
      yBall_old=yBall;
 
+     if( (BonusStatus == INPLAY) && (bonusDrawn == 0) ){
+         // Draw bonus
+         halLcdCircle( BONUS_APPEAR_X, BONUS_APPEAR_Y, BONUS_RADIUS, PIXEL_ON);//draw bonus
+         //halLcdPrintXY("B",BONUS_APPEAR_X, BONUS_APPEAR_Y,OVERWRITE_TEXT);//draw bonus
+         bonusDrawn = 1;
+     }
+     // If bonus has been drawn and now has been hit by a player, it needs to be undrawn
+     if( (BonusStatus == PICKEDUP ) && (bonusDrawn == 1) ){
+         halLcdCircle( BONUS_APPEAR_X, BONUS_APPEAR_Y, BONUS_RADIUS, PIXEL_OFF);//undraw bonus
+         //halLcdPrintXY("B",BONUS_APPEAR_X, BONUS_APPEAR_Y,INVERT_TEXT);//undraw bonus
+         bonusDrawn = 0; // clear the bonus drawn variable
+     }
+
+     if( (p1bonusEnabled == 1) && (p1Projectiles_onscreen == 1)  ){
+
+         // Clear old projectiles
+
+         halLcdHLine(p1ProjectileA_X_old2 - PROJECTILE_HALF_SIZE, p1ProjectileA_X_old2 + PROJECTILE_HALF_SIZE, p1ProjectileA_Y_old2, PIXEL_OFF);
+         halLcdHLine(p1ProjectileB_X_old2 -PROJECTILE_HALF_SIZE, p1ProjectileB_X_old2 + PROJECTILE_HALF_SIZE, p1ProjectileB_Y_old2, PIXEL_OFF);
+                  // draw new line on racket
+
+         /*
+         halLcdCircle( p1ProjectileA_X_old2, p1ProjectileA_Y_old2, PROJECTILE_RADIUS, PIXEL_OFF);
+         halLcdCircle( p1ProjectileB_X_old, p1ProjectileB_Y_old2, PROJECTILE_RADIUS, PIXEL_OFF);
+*/
+
+         // Draw projectile trails
+         halLcdHLine(p1ProjectileA_X_old-PROJECTILE_HALF_SIZE, p1ProjectileA_X_old+PROJECTILE_HALF_SIZE, p1ProjectileA_Y_old, PIXEL_ON);
+         halLcdHLine(p1ProjectileB_X_old-PROJECTILE_HALF_SIZE, p1ProjectileB_X_old +PROJECTILE_HALF_SIZE, p1ProjectileB_Y_old, PIXEL_ON);
+
+
+        /* halLcdCircle( p1ProjectileA_X_old, p1ProjectileA_Y_old, PROJECTILE_RADIUS, PIXEL_ON);
+         halLcdCircle( p1ProjectileB_X_old, p1ProjectileB_Y_old, PROJECTILE_RADIUS, PIXEL_ON);
+*/
+
+
+         // Draw new projectile positions
+         halLcdHLine(p1ProjectileA_X-PROJECTILE_HALF_SIZE, p1ProjectileA_X+PROJECTILE_HALF_SIZE, p1ProjectileA_Y , PIXEL_ON);
+         halLcdHLine(p1ProjectileB_X-PROJECTILE_HALF_SIZE, p1ProjectileB_X+PROJECTILE_HALF_SIZE, p1ProjectileB_Y, PIXEL_ON);
+
+         /*
+         halLcdCircle( p1ProjectileA_X, p1ProjectileA_Y, PROJECTILE_RADIUS, PIXEL_ON);
+         halLcdCircle( p1ProjectileB_X, p1ProjectileB_Y, PROJECTILE_RADIUS, PIXEL_ON);
+         */
+
+         // Update older positions
+         p1ProjectileA_X_old2 = p1ProjectileA_X_old;
+         p1ProjectileA_Y_old2 = p1ProjectileA_Y_old;
+         p1ProjectileA_X_old = p1ProjectileA_X;
+         p1ProjectileA_Y_old = p1ProjectileA_Y;
+
+         p1ProjectileB_X_old2 = p1ProjectileB_X_old;
+         p1ProjectileB_Y_old2 = p1ProjectileB_Y_old;
+         p1ProjectileB_X_old = p1ProjectileB_X;
+         p1ProjectileB_Y_old = p1ProjectileB_Y;
+
+     }
+
      if(R1Dir == UP){
-             //clear old racket1 bottom line
-             halLcdHLine(xR1_old, xR1_old+3, yR1_previousPosition + HALF_RACKET_SIZE, PIXEL_OFF);
-             // draw new line on racket
-             halLcdHLine(xR1, xR1+3, yR1 - HALF_RACKET_SIZE, PIXEL_ON);
+         //clear old racket1 bottom line
+         halLcdHLine(xR1_old, xR1_old+2, yR1_previousPosition + HALF_RACKET_SIZE, PIXEL_OFF);
+         // draw new line on racket
+         halLcdHLine(xR1, xR1+2, yR1 - HALF_RACKET_SIZE, PIXEL_ON);
+
+         // draw guns if p1 bonus enabled
+         if(p1bonusEnabled == 1){
+                 // clear old racket1 top gun line
+                 halLcdHLine(xR1_old+3, xR1_old+5, yR1_previousPosition - HALF_RACKET_SIZE, PIXEL_OFF);
+                 //clear old racket1 bottom gun line
+                 halLcdHLine(xR1_old+3, xR1_old+5, yR1_previousPosition + HALF_RACKET_SIZE, PIXEL_OFF);
+
+
+                 // draw new racket1 top gun line
+                 halLcdHLine(xR1+3, xR1+5, yR1 - HALF_RACKET_SIZE, PIXEL_ON);
+                 // draw new racket1 bottom gun lines
+                 halLcdHLine(xR1+3, xR1+5, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
+          }
       }
       if(R1Dir == DOWN){
-             //clear old racket1 top line
-             halLcdHLine(xR1_old, xR1_old+3, yR1_previousPosition - HALF_RACKET_SIZE, PIXEL_OFF);
-             // draw new line on racket
-             halLcdHLine(xR1, xR1+3, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
+
+          //clear old racket1 top line
+          halLcdHLine(xR1_old, xR1_old+2, yR1_previousPosition - HALF_RACKET_SIZE, PIXEL_OFF);
+
+          // draw new line on racket
+          halLcdHLine(xR1, xR1+2, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
+
+          // draw guns if p1 bonus enabled
+          if(p1bonusEnabled == 1){
+
+                 //clear old racket1 top gun line
+                 halLcdHLine(xR1_old+3, xR1_old+5, yR1_previousPosition - HALF_RACKET_SIZE, PIXEL_OFF);
+                 // clear old racket1 bottom gun line
+                 halLcdHLine(xR1_old+3, xR1_old+5, yR1_previousPosition + HALF_RACKET_SIZE, PIXEL_OFF);
+
+                 //draw new racket1 top gun line
+                 halLcdHLine(xR1+3, xR1+5, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
+                 //draw new racket1 bottom gun lines
+                 halLcdHLine(xR1+3, xR1+5, yR1 - HALF_RACKET_SIZE, PIXEL_ON);
+          }
       }
 
       if(R2Dir == UP){
                   //clear old racket2 bottom line
-                  halLcdHLine(xR2_old, xR2_old-3, yR2_previousPosition + HALF_RACKET_SIZE, PIXEL_OFF);
+                  halLcdHLine(xR2_old, xR2_old-2, yR2_previousPosition + HALF_RACKET_SIZE, PIXEL_OFF);
                   // draw new line on racket
-                  halLcdHLine(xR2, xR2-3, yR2 - HALF_RACKET_SIZE, PIXEL_ON);
+                  halLcdHLine(xR2, xR2-2, yR2 - HALF_RACKET_SIZE, PIXEL_ON);
       }
       if(R2Dir == DOWN){
                   //clear old racket2
-                  halLcdHLine(xR2_old, xR2_old-3, yR2_previousPosition - HALF_RACKET_SIZE, PIXEL_OFF);
+                  halLcdHLine(xR2_old, xR2_old-2, yR2_previousPosition - HALF_RACKET_SIZE, PIXEL_OFF);
                   // draw new line on racket
-                  halLcdHLine(xR2, xR2-3, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
+                  halLcdHLine(xR2, xR2-2, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
       }
 
 
@@ -341,17 +457,17 @@ void halBoardInit(void)
   P2REN = P2REN | (BIT6+BIT7); //pin 6 internal pull R enabled
   P2OUT = P2OUT | (BIT6+BIT7); //pin 6 pull-down
 
-  //configure JOYSTICK DOWN (P2.5) and UP (P2.4)
-  P2SEL = P2SEL & ~(BIT5 + BIT4); //GPIO
-  P2DIR = P2DIR & ~(BIT5 + BIT4); //input
-  P2REN = P2REN | (BIT5 + BIT4);  //internal resistor enabled
-  P2OUT = P2OUT | (BIT5 + BIT4);  //pull up, so pressing it makes it LOW
+  //configure JOYSTICK DOWN (P2.5) and UP (P2.4) and right (P2.2)
+  P2SEL = P2SEL & ~(BIT5 + BIT4 + BIT2); //GPIO
+  P2DIR = P2DIR & ~(BIT5 + BIT4 + BIT2); //input
+  P2REN = P2REN | (BIT5 + BIT4 + BIT2);  //internal resistor enabled
+  P2OUT = P2OUT | (BIT5 + BIT4 + BIT2);  //pull up, so pressing it makes it LOW
 
   //configure interrupts for mechanical inputs
   // Set-up the interrupt
-   P2IES |= ( BIT7 + BIT6 + BIT5 + BIT4 ); // High/Low edge (falling edge)
-   P2IFG &= ~( BIT7 + BIT6 + BIT5 + BIT4 ); //IFG bits cleared
-   P2IE |= ( BIT7 + BIT6 + BIT5 + BIT4 ); //Enable pins interrupts
+   P2IES |= ( BIT7 + BIT6 + BIT5 + BIT4 +BIT2 ); // High/Low edge (falling edge)
+   P2IFG &= ~( BIT7 + BIT6 + BIT5 + BIT4 +BIT2 ); //IFG bits cleared
+   P2IE |= ( BIT7 + BIT6 + BIT5 + BIT4 + BIT2); //Enable pins interrupts
 }
 
 //NOTE: TimerA0 is initialized inside hal_lcd.c because it's already used for the LCD backlight PWM
@@ -364,6 +480,21 @@ void TimerA1Init(void)
   TA1CCTL0 = CCIE; //Enable TA1CCR0 CCIFG int
   TA1CTL    = TASSEL_1 + MC_1 + TACLR; // ACLK, UP mode. Do not enable TAIE (rollover int)
 }
+
+/*
+//Initialize TimerB0 to drive the ADC12 and inputs reading
+void TimerB0Init(void)
+{
+  //TB0CCR0   = INPUT_INTERVAL_mS*(Faclk/1000);
+  // INPUT_INTERVAL_mS*(32.768) ~ INPUT_INTERVAL_mS*(33)
+  TB0CCR0   = INPUT_INTERVAL_mS*33; //set timer interval
+  // Provide CCR1 value, time until CCR1 match must be greater than 75 us!
+  TB0CCR1   = 3;         //this time will be 3 * 1/32768kHZ (> 75usec)
+  TB0CCTL1  = OUTMOD_3;  // CCR1 output mode => SET/RESET. Do not enable TB0CCR3 INT
+  // ACLK, UP mode, clear TBR, enable rollover INT
+  TB0CTL    = TBSSEL_1 + MC_1 + TBCLR + TBIE;
+}
+*/
 
 /***********************************************************************
  *************** Interrupt Service Routines (ISRs) *********************
@@ -401,7 +532,27 @@ __interrupt void TIMER1_A0_ISR(void)
    __bic_SR_register_on_exit(LPM3_bits);
  }
 }
-
+/*
+#pragma vector=TIMER0_B1_VECTOR
+__interrupt void TIMER0_B1_ISR(void)
+{
+  switch(__even_in_range(TB0IV,14))
+  {
+    case  0: break;                // No interrupt
+    case  2: break;                // TB0CCR1 not used
+    case  4: break;                // TB0CCR2 not used
+    case  6: break;                // TB0CCR3 not used
+    case  8: break;                // TB0CCR4 not used
+    case 10: break;                // TB0CCR5 not used
+    case 12: break;                // TB0CCR6 not used
+    case 14:                       // TBIFG overflow, enable new ADC
+        InterruptTimeoutPending = 1; //warn the CPU that input update is required
+            //Keep CPU active on exit to process user inputs in main loop
+            __bic_SR_register_on_exit(LPM3_bits);
+            break;
+  }
+}
+*/
 
 // Port 2 Interrupt Service Routine (ISR)
 #pragma vector=PORT2_VECTOR  //attaches function my_Port2_ISR to P2 interrupt
@@ -414,6 +565,9 @@ __interrupt void my_Port2_ISR(void)
 
     if((P2IFG & BIT4)) //JOYSTICK UP pressed
            P2IFG &= ~BIT4;    // interrupt serviced, clear corresponding interrupt flag
+
+    if((P2IFG & BIT2)) //JOYSTICK RIGHT pressed
+               P2IFG &= ~BIT2;    // interrupt serviced, clear corresponding interrupt flag
 
     if((P2IFG & BIT6)) //SW1 pressed for UP
             P2IFG &= ~BIT6; // interrupt serviced, clear corresponding interrupt flag
@@ -436,6 +590,8 @@ __interrupt void my_Port2_ISR(void)
 
         // Change game state to starting
         GameStartInit();
+
+        InputUpdatePending  = 0;
     }
 
     if(gameStateInstance == SCORING){
