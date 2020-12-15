@@ -69,6 +69,7 @@ volatile char scoreString[14];
 volatile char currentScoresString[15];
 volatile char winningString[13];
 volatile int winningScore;
+volatile char scoresBannerString[6];
 
 volatile enum PlayerEnum Scorer;
 volatile enum PlayerEnum Player;

@@ -156,6 +156,11 @@ void GameStartInit()
  GameUpdatePending = 0;
  LCDUpdatePending = 0;
 
+ // draw top wall
+ halLcdHLine(0,LCD_COL,10,PIXEL_ON);
+
+ //
+
  //Initial position of racket 1
  xR1 = 0; //left-hand side
  yR1 = LCD_ROW >> 1; //middle row
@@ -177,6 +182,8 @@ void GameStartInit()
  halLcdVLine(xR2, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
  halLcdVLine(xR2 - 1, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
  //halLcdVLine(xR2 - 2, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
+
+
 
  yR1_old = yR1;
  //yR1_previousPosition = yR1;
@@ -207,7 +214,7 @@ void GameStartInit()
  gameStateInstance = STARTING;
 
  // Set the winning score value
- winningScore = 9;
+ winningScore = 3;
 
 }
 
@@ -233,7 +240,7 @@ void UserInputs_update(void)
     }
     if(!(P2IN & BIT4)){ //UP pressed for Player1
         ContinuousPressChecker = 1; // Continue to check if this is continously held down
-        if (yR1 > HALF_RACKET_SIZE) //avoid overwriting top wall
+        if (yR1 > (HALF_RACKET_SIZE+10)) //avoid overwriting top wall
         {
            yR1_previousPosition = yR1;
            yR1 -= 1; //move racket 1 pixel up
@@ -254,7 +261,7 @@ void UserInputs_update(void)
     if(!(P2IN & BIT6)) //SW1 pressed for UP for Player2
     {
           ContinuousPressChecker = 1; // Continue to check if this is continously held down
-          if (yR2 > HALF_RACKET_SIZE) //avoid overwriting top wall
+          if (yR2 > (HALF_RACKET_SIZE+10)) //avoid overwriting top wall
           {
               yR2_previousPosition = yR2;
               yR2 -= 1; //move racket 1 pixels up
@@ -279,6 +286,7 @@ void UserInputs_update(void)
 //Update drawings in LCD screen (CPU is awaken by TimerA1 interval ints)
 void LCD_update(void)
 {
+
      /*update older positions to clear old rackets and draw new ones
     * NB: this has been optimised to only draw the new top line and undraw the old bottom line for moving UP,
     * and vice versa for moving DOWN, rather than undrawing then drawing the entire racket(s) again.
