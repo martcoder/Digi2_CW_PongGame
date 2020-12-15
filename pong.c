@@ -148,6 +148,8 @@ void GameIntroInit(){
     p2bonusCooldown = 0;
     BonusStatus = OUTOFPLAY;
     LastHitterInstance = P1;
+    // Set the winning score value
+    winningScore = 5;
 }
 
 //This function can be used to initialize game variables at boot-up
@@ -173,6 +175,12 @@ void GameStartInit()
      xR2_old = xR2;
      yR2_old = yR2;
 
+     //Initial position of bonus racket 2
+     xR2bonus = LCD_COL -1;
+     yR2bonus = LCD_ROW >> 1; //middle row
+     xR2bonus_old = xR2bonus;
+     yR2bonus_old = yR2bonus;
+
      //Draw new racket1
      halLcdVLine(xR1, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
      halLcdVLine(xR1 + 1, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
@@ -182,8 +190,6 @@ void GameStartInit()
      halLcdVLine(xR2, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
      halLcdVLine(xR2 - 1, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
      //halLcdVLine(xR2 - 2, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
-
-
 
      yR1_old = yR1;
      //yR1_previousPosition = yR1;
@@ -196,25 +202,16 @@ void GameStartInit()
      R2Dir = STOP;
 
      //Bonus initialisation
-
      bonusScore = 1;
      bonusDrawn = 0;
      p1Projectiles_onscreen = 0;
-     p2Projectiles_onscreen = 0;
      p1Projectiles_active = 0;
-     p2Projectiles_active = 0;
-
      p1_projectileA_x_displacement = +2; // move to the right
      p1_projectileB_x_displacement = +2; // move to the right
-
-     p2_projectileA_x_displacement = -1; // move to the left
-     p2_projectileB_x_displacement = -1; // move to the left
 
      //Initial state of the ball
      gameStateInstance = STARTING;
 
-     // Set the winning score value
-     winningScore = 5;
 }
 
 //Read user inputs here (CPU is awaken by ADC12 conversion)
@@ -265,7 +262,18 @@ void UserInputs_update(void)
               yR2_previousPosition = yR2;
               yR2 -= 1; //move racket 1 pixels up
           }
+
           R2Dir = UP;
+
+          if(p2bonusEnabled == 1){
+              if ( yR2bonus < (LCD_ROW - QUARTER_RACKET_SIZE)  ) //avoid going lower than bottom of LCD
+              {
+                  yR2bonus_previousPosition = yR2bonus;
+                  yR2bonus += 1; //move racket 1 pixels down (opposite of player2 standard racket)
+              }
+              R2bonusDir = DOWN;
+          }
+
           return;
     }
 
@@ -278,6 +286,16 @@ void UserInputs_update(void)
              yR2 += 1; //move racket 1 pixels down
           }
           R2Dir = DOWN;
+
+          if(p2bonusEnabled == 1){
+              if ( yR2bonus > (QUARTER_RACKET_SIZE+12) ) //avoid overwriting top wall
+              {
+                 yR2bonus_previousPosition = yR2bonus;
+                 yR2bonus -= 1; //move racket 1 pixels up (opposite of player2 standard racket)
+              }
+              R2bonusDir = UP;
+          }
+
           return;
      }
 }
@@ -343,7 +361,6 @@ void LCD_update(void)
          halLcdCircle( p1ProjectileB_X_old, p1ProjectileB_Y_old, PROJECTILE_RADIUS, PIXEL_ON);
 */
 
-
          // Draw new projectile positions
          halLcdHLine(p1ProjectileA_X-PROJECTILE_HALF_SIZE, p1ProjectileA_X+PROJECTILE_HALF_SIZE, p1ProjectileA_Y , PIXEL_ON);
          halLcdHLine(p1ProjectileB_X-PROJECTILE_HALF_SIZE, p1ProjectileB_X+PROJECTILE_HALF_SIZE, p1ProjectileB_Y, PIXEL_ON);
@@ -366,6 +383,7 @@ void LCD_update(void)
 
      }
 
+
      if(R1Dir == UP){
          //clear old racket1 bottom line
          halLcdHLine(xR1_old, xR1_old+2, yR1_previousPosition + HALF_RACKET_SIZE, PIXEL_OFF);
@@ -378,7 +396,6 @@ void LCD_update(void)
                  halLcdHLine(xR1_old+3, xR1_old+5, yR1_previousPosition - HALF_RACKET_SIZE, PIXEL_OFF);
                  //clear old racket1 bottom gun line
                  halLcdHLine(xR1_old+3, xR1_old+5, yR1_previousPosition + HALF_RACKET_SIZE, PIXEL_OFF);
-
 
                  // draw new racket1 top gun line
                  halLcdHLine(xR1+3, xR1+5, yR1 - HALF_RACKET_SIZE, PIXEL_ON);
@@ -414,20 +431,41 @@ void LCD_update(void)
                   halLcdHLine(xR2_old, xR2_old-2, yR2_previousPosition + HALF_RACKET_SIZE, PIXEL_OFF);
                   // draw new line on racket
                   halLcdHLine(xR2, xR2-2, yR2 - HALF_RACKET_SIZE, PIXEL_ON);
+
+                  // if p2bonus is enabled, show player2 inverse racket which is half the size of the normal racket
+                  if(p2bonusEnabled){
+
+                      //clear old racket top line
+                                            halLcdHLine(xR2bonus_old-3, xR2bonus_old-5, yR2bonus_previousPosition - QUARTER_RACKET_SIZE, PIXEL_OFF);
+                                            // draw new line on racket
+                                            halLcdHLine(xR2bonus-3, xR2bonus-5, yR2bonus + QUARTER_RACKET_SIZE, PIXEL_ON);
+
+
+                  }
       }
       if(R2Dir == DOWN){
                   //clear old racket2
                   halLcdHLine(xR2_old, xR2_old-2, yR2_previousPosition - HALF_RACKET_SIZE, PIXEL_OFF);
                   // draw new line on racket
                   halLcdHLine(xR2, xR2-2, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
-      }
 
+                  // if p2bonus is enabled, show player2 inverse racket which is half the size of the normal racket
+                  if(p2bonusEnabled){
+                      //clear old bonusracket2 bottom line
+                                            halLcdHLine(xR2bonus_old-3, xR2bonus_old-5, yR2bonus_previousPosition + QUARTER_RACKET_SIZE, PIXEL_OFF);
+                                            // draw new line on racket
+                                            halLcdHLine(xR2bonus-3, xR2bonus-5, yR2bonus - QUARTER_RACKET_SIZE, PIXEL_ON);
+                  }
+      }
 
           xR1_old = xR1;
           yR1_old = yR1;
           xR2_old = xR2;
           yR2_old = yR2;
-
+          if(p2bonusEnabled){
+              xR2bonus_old = xR2bonus;
+              yR2bonus_old = yR2bonus;
+          }
 }
 
 /*********************************************************

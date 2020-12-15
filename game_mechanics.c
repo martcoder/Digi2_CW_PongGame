@@ -86,6 +86,20 @@ int P1_racket_lower_hit() //check ball vs left racket lower
      return 0;
 }
 
+int P2_bonus_racket_hit() //check ball vs player2 bonus racket
+{
+ if( (yBall <= (yR2bonus + QUARTER_RACKET_SIZE)) && (yBall >= (yR2bonus - QUARTER_RACKET_SIZE)) && (xBall >= (xR2bonus - BALL_RADIUS - 5)) ){
+     // for a moving racket, instead of using racket zones, use the direction of racket movement to add to the ball's movement in the same direction
+     if(yR2bonus_old < yR2bonus) // racket is moving down
+          y_displacement = y_displacement+1; // move ball downward too
+     if(yR2bonus_old > yR2bonus) // racket is moving up
+          y_displacement = y_displacement-1; // move ball upward too
+     return 1;
+ }
+ else
+     return 0;
+}
+
 int P2_racket_hit() //check ball vs right racket
 {
  if( (yBall <= (yR2 + HALF_RACKET_SIZE)) && (yBall >= (yR2 - HALF_RACKET_SIZE)) && (xBall >= (LCD_COL - BALL_RADIUS - 4)) )
@@ -323,7 +337,9 @@ void game_update(void)
                     if(LastHitterInstance ==  P2){ // player2 or AI struck ball last
                         p2bonusEnabled = 1;
                         p2bonusCooldown = 2;
-                         // don't draw the bonus now that it has been claimed
+                        //Draw the bonusracket2
+                        halLcdVLine(xR2bonus-3, yR2bonus - QUARTER_RACKET_SIZE, yR2bonus + QUARTER_RACKET_SIZE, PIXEL_ON);
+                        halLcdVLine(xR2bonus- 4, yR2bonus - QUARTER_RACKET_SIZE, yR2bonus + QUARTER_RACKET_SIZE, PIXEL_ON);
                     }
 
             // Also update the banner to show that bonus has been picked up
@@ -401,6 +417,9 @@ void game_update(void)
       halLcdPrintLine("JOYSTICK DOWN", 6, OVERWRITE_TEXT);//PRINT MESSAGE
       halLcdPrintLine("==vs AI==", 7, OVERWRITE_TEXT);//PRINT MESSAGE
 
+      p1Score = 0;
+      p2Score = 0;
+
       //TimerB0Init(); // initialise timerB as a way of providing a timeout and preventing further interrupts for some time
 
       // Now stop TimerB0
@@ -446,6 +465,18 @@ void game_update(void)
           R2Dir = UP;
       }
 
+      if(yR2bonus < (LCD_ROW >> 1)){
+                yR2bonus_previousPosition = yR2bonus;
+                yR2bonus += 1; //move racket 1 pixels down
+                R2bonusDir = DOWN;
+      }
+
+      if(yR2bonus > (LCD_ROW >> 1)){
+                yR2bonus_previousPosition = yR2bonus;
+                yR2bonus -= 1; //move racket 1 pixels up
+                R2bonusDir = UP;
+      }
+
       // When rackets are back in starting position, redraw them
       if( (yR1 == ( LCD_ROW >> 1 ) ) && (yR2 == (LCD_ROW >> 1 ) ) ){
 
@@ -461,8 +492,11 @@ void game_update(void)
           halLcdVLine(xR2, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
           halLcdVLine(xR2 - 1, yR2 - HALF_RACKET_SIZE, yR2 + HALF_RACKET_SIZE, PIXEL_ON);
 
-
-
+          if(p2bonusEnabled == 1){
+              //Draw the bonusracket2
+              halLcdVLine(xR2bonus-3, yR2bonus - QUARTER_RACKET_SIZE, yR2bonus + QUARTER_RACKET_SIZE, PIXEL_ON);
+              halLcdVLine(xR2bonus- 4, yR2bonus - QUARTER_RACKET_SIZE, yR2bonus + QUARTER_RACKET_SIZE, PIXEL_ON);
+          }
       }
 
        // Initial position of the ball
@@ -516,6 +550,8 @@ void game_update(void)
 
       }
 
+
+
           xBall = xBall + x_displacement;
           yBall = yBall + y_displacement;
 
@@ -531,6 +567,14 @@ void game_update(void)
               LastHitterInstance = P1;
               x_displacement = +1; // 'bounce' the ball off the racket and keep it moving toward opposite side
               racket_movement_effect(1); // check to see if racket is moving or not, and add to the ball's direction displacement depending on this
+          }
+
+          // Check ball against player2 bonus racket
+          if(p2bonusEnabled == 1){
+              if(P2_bonus_racket_hit()){
+                  LastHitterInstance = P2;
+                  x_displacement = -1;// 'bounce' the ball off the racket and keep it moving toward opposite side
+              }
           }
 
           if(P2_racket_hit()){
@@ -584,6 +628,9 @@ void game_update(void)
                   }
                   else{ // switch off player2 bonus
                       p2bonusEnabled = 0;
+                      //also clear the bonus racket from the LCD
+                      halLcdVLine(xR2bonus-3, yR2bonus_previousPosition - QUARTER_RACKET_SIZE, yR2bonus_previousPosition + QUARTER_RACKET_SIZE, PIXEL_OFF);
+                      halLcdVLine(xR2bonus- 4, yR2bonus_previousPosition - QUARTER_RACKET_SIZE, yR2bonus_previousPosition + QUARTER_RACKET_SIZE, PIXEL_OFF);
                   }
                   //halLcdPrintLine(scoreString, 1, OVERWRITE_TEXT);//PRINT current scorer as scoring a goal
                   updateBannerString(bannerString,p1Score,p2Score,p1bonusEnabled,p2bonusEnabled);
@@ -642,6 +689,7 @@ void game_update(void)
 
               halLcdPrintLine(" Press an input   or Reset btn", 5, OVERWRITE_TEXT);//PRINT MESSAGE
               halLcdPrintLine(" to continue", 7, OVERWRITE_TEXT);//PRINT MESSAGE
+
 
 
           //TimerB0Init(); // initialise timerB as a way of providing a timeout and preventing further interrupts for some time

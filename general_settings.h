@@ -22,7 +22,7 @@
 
 #define PROJECTILE_HALF_SIZE 2 // projectile radius in pixels
 #define BONUS_RADIUS 5 // bonus radius in pixels
-#define BONUS_APPEAR_X 60
+#define BONUS_APPEAR_X 70
 #define BONUS_APPEAR_Y 30
 
 
@@ -64,6 +64,7 @@ volatile int yR1_previousPosition, yR2_previousPosition; // For if yR1_old gets 
 // NB yR1_old will also be used to check if racket position is different from old Position, and thereby determining if it is moving up or down, or not moving
 volatile enum VDir R1Dir; //last movement direction for racket 1 (used for ball control)
 volatile enum VDir R2Dir; //last movement direction for racket 2 (used for ball control)
+volatile enum VDir R2bonusDir; // last movement direction for player 2 bonus racket
 
 //Score handling
 enum PlayerEnum {PLAYER1,PLAYER2};
@@ -99,12 +100,9 @@ volatile int p1_projectileA_x_displacement,p1_projectileB_x_displacement; // to 
 //player2 projectile handling
 volatile int p2bonusEnabled; // bonus enabled or not for this player
 volatile int p2bonusCooldown;
-volatile int p2Projectiles_onscreen;
-volatile int p2Projectiles_active;
-volatile int p2ProjectileX, p2ProjectileY; //Current projectile position
-volatile int p2ProjectileX_old, p2ProjectileY_old; //For projectile trail position
-volatile int p2ProjectileX_old2, p2ProjectileY_old2; //To delete old projectile position
-volatile int p2_projectileA_x_displacement,p2_projectileB_x_displacement; // to set x_displacement of projectile
+volatile int xR2bonus, yR2bonus; //Current player2 bonus racket positions
+volatile int xR2bonus_old, yR2bonus_old; //To delete old racket position
+volatile int yR2bonus_previousPosition; // For if yR1_old gets overwritten with yR1 by racket staying still, but there is still a previous position
 
 
 #endif /* GENERAL_SETTINGS_H_ */
