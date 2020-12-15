@@ -94,14 +94,11 @@ void main(void)
                  UserInputs_update(); // update positions if inputs are currently pressed, also set ContinuousPressChecker if they are
     }
 
-
     if(GameUpdatePending)
     {
         GameUpdatePending=0;
      game_update();
     }
-
-
 
     if(LCDUpdatePending)
     {
@@ -113,7 +110,6 @@ void main(void)
 
   }   	  
 }
-
 
 
 //LCD initialization
@@ -370,8 +366,6 @@ void UserInputs_update(void)
 void LCD_update(void)
 {
 
-
-
      /*update older positions to clear old rackets and draw new ones
     * NB: this has been optimised to only draw the new top line and undraw the old bottom line for moving UP,
     * and vice versa for moving DOWN, rather than undrawing then drawing the entire racket(s) again.
@@ -623,21 +617,19 @@ __interrupt void TIMER1_A0_ISR(void)
   if(!LCDUpdatePending) //if update still pending, skip this interval
  {
    LCD_intervals++;
-   if(LCD_intervals>=(LCD_INTERVAL_mS/TIMING_BASE_mS)) //time to run the ball update
+   if(LCD_intervals>=(LCD_INTERVAL_mS/TIMING_BASE_mS)) //8 is time to run the LCD update
    {
       LCDUpdatePending = 1; //warn the CPU that LCD update is required
       LCD_intervals = 0;
    }
  }
 
-
-
  if(!GameUpdatePending) //if update still pending, skip this interval
  {
    Game_intervals++;
-   if(Game_intervals>=(GAME_INTERVAL_mS/TIMING_BASE_mS)) //time to run the ball update
+   if(Game_intervals>=(GAME_INTERVAL_mS/TIMING_BASE_mS)) //10 is time to run the game update
    {
-     GameUpdatePending = 1; //warn the CPU that ball update is required
+     GameUpdatePending = 1; //warn the CPU that game update is required
      Game_intervals = 0;
    }
  }

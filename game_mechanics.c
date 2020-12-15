@@ -14,8 +14,6 @@
 #include "msp430f5438a.h"
 #include "lookup.c"
 
-
-
 int top_wall_reached()
 {
     if(yBall <= (BALL_RADIUS+12) ) //top wall reached
@@ -182,13 +180,12 @@ void racket_movement_effect(int player){
 void clearProjectiles(){
 
     // Clear old projectiles
-        halLcdHLine(p1ProjectileA_X - PROJECTILE_HALF_SIZE, p1ProjectileA_X + PROJECTILE_HALF_SIZE, p1ProjectileA_Y, PIXEL_OFF);
-                      halLcdHLine(p1ProjectileB_X -PROJECTILE_HALF_SIZE, p1ProjectileB_X + PROJECTILE_HALF_SIZE, p1ProjectileB_Y, PIXEL_OFF);
-                      halLcdHLine(p1ProjectileA_X_old - PROJECTILE_HALF_SIZE, p1ProjectileA_X_old + PROJECTILE_HALF_SIZE, p1ProjectileA_Y_old, PIXEL_OFF);
-                      halLcdHLine(p1ProjectileB_X_old -PROJECTILE_HALF_SIZE, p1ProjectileB_X_old + PROJECTILE_HALF_SIZE, p1ProjectileB_Y_old, PIXEL_OFF);
-                      halLcdHLine(p1ProjectileA_X_old2 - PROJECTILE_HALF_SIZE, p1ProjectileA_X_old2 + PROJECTILE_HALF_SIZE, p1ProjectileA_Y_old2, PIXEL_OFF);
-                      halLcdHLine(p1ProjectileB_X_old2 -PROJECTILE_HALF_SIZE, p1ProjectileB_X_old2 + PROJECTILE_HALF_SIZE, p1ProjectileB_Y_old2, PIXEL_OFF);
-
+    halLcdHLine(p1ProjectileA_X - PROJECTILE_HALF_SIZE, p1ProjectileA_X + PROJECTILE_HALF_SIZE, p1ProjectileA_Y, PIXEL_OFF);
+    halLcdHLine(p1ProjectileB_X -PROJECTILE_HALF_SIZE, p1ProjectileB_X + PROJECTILE_HALF_SIZE, p1ProjectileB_Y, PIXEL_OFF);
+    halLcdHLine(p1ProjectileA_X_old - PROJECTILE_HALF_SIZE, p1ProjectileA_X_old + PROJECTILE_HALF_SIZE, p1ProjectileA_Y_old, PIXEL_OFF);
+    halLcdHLine(p1ProjectileB_X_old -PROJECTILE_HALF_SIZE, p1ProjectileB_X_old + PROJECTILE_HALF_SIZE, p1ProjectileB_Y_old, PIXEL_OFF);
+    halLcdHLine(p1ProjectileA_X_old2 - PROJECTILE_HALF_SIZE, p1ProjectileA_X_old2 + PROJECTILE_HALF_SIZE, p1ProjectileA_Y_old2, PIXEL_OFF);
+    halLcdHLine(p1ProjectileB_X_old2 -PROJECTILE_HALF_SIZE, p1ProjectileB_X_old2 + PROJECTILE_HALF_SIZE, p1ProjectileB_Y_old2, PIXEL_OFF);
 }
 
 void resetProjectiles(){
@@ -196,7 +193,6 @@ void resetProjectiles(){
     // Set projectile A position off screen for now so as to not interfere with the ball
     p1ProjectileA_X = xR1-10;
     p1ProjectileA_Y = yR1 - HALF_RACKET_SIZE;
-
 
     // Update previous/old for projectile A
     p1ProjectileA_X_old = p1ProjectileA_X;
@@ -206,10 +202,8 @@ void resetProjectiles(){
 
 
     // Set projectile B position off screen for now so as to not interfere with the ball
-                                p1ProjectileB_X = xR1-10;
-                                p1ProjectileB_Y = yR1 + HALF_RACKET_SIZE;
-
-
+    p1ProjectileB_X = xR1-10;
+    p1ProjectileB_Y = yR1 + HALF_RACKET_SIZE;
 
     // Update previous/old for projectile B
     p1ProjectileB_X_old = p1ProjectileB_X;
@@ -357,17 +351,17 @@ void game_update(void)
 
         // If ball meets bonus, enable bonus for that player...
         if(
-                      (
-                              ( xBall <= ( BONUS_APPEAR_X + 5 ) )
-                              &&
-                              ( xBall >= ( BONUS_APPEAR_X - 5 ) )
-                      )
-                      &&
-                      (
-                              ( yBall <= ( BONUS_APPEAR_Y + 5 ) )
-                              &&
-                              ( yBall >= ( BONUS_APPEAR_Y - 5) )
-                       )
+             (
+                  ( xBall <= ( BONUS_APPEAR_X + 5 ) )
+                  &&
+                  ( xBall >= ( BONUS_APPEAR_X - 5 ) )
+             )
+             &&
+             (
+                  ( yBall <= ( BONUS_APPEAR_Y + 5 ) )
+                  &&
+                  ( yBall >= ( BONUS_APPEAR_Y - 5) )
+             )
           ){
             BonusStatus = PICKEDUP;
 
@@ -460,17 +454,15 @@ void game_update(void)
            halLcdPrintLine("Move JOYSTICK UP", 7, OVERWRITE_TEXT);//PRINT MESSAGE
 
            //stop TimerA1. This prevents new LCD and ball updates
-                 //but user input is operational as Port2 interrupts can still be triggered
-                 TA1CTL= TA1CTL & ~(BIT5 + BIT4); //MC=00 (bits 5,4) 0b11001111
-                 // Now send CPU to sleep and wait for user to proceed
-                       // Bit-set (LPM3_bits + GIE) in SR register to enter LPM3 mode
-                       __bis_SR_register(LPM3_bits + GIE);
-                       __no_operation(); //for debug
+           //but user input is operational as Port2 interrupts can still be triggered
+           TA1CTL= TA1CTL & ~(BIT5 + BIT4); //MC=00 (bits 5,4) 0b11001111
+           // Now send CPU to sleep and wait for user to proceed
+           // Bit-set (LPM3_bits + GIE) in SR register to enter LPM3 mode
+           __bis_SR_register(LPM3_bits + GIE);
+           __no_operation(); //for debug
 
      break;
   case INTRO: // Game intro is happening, e.g. menu selection
-
-      //P2IE &= ( BIT7 + BIT6 + BIT5 + BIT4 + BIT2); //disable pins interrupts temporarily
 
       halLcdClearScreen(); //CLEAR SCREEN
 
@@ -483,17 +475,9 @@ void game_update(void)
       p1Score = 0;
       p2Score = 0;
 
-      //TimerB0Init(); // initialise timerB as a way of providing a timeout and preventing further interrupts for some time
-
-      // Now stop TimerB0
-      //TB0CTL    = TBSSEL_1 + MC_0 + TBCLR + TBIE;
-
-
       //stop TimerA1. This prevents new LCD and ball updates
       //but user input is operational as Port2 interrupts can still be triggered
       TA1CTL= TA1CTL & ~(BIT5 + BIT4); //MC=00 (bits 5,4) 0b11001111
-
-      //P2IE |= ( BIT7 + BIT6 + BIT5 + BIT4 + BIT2); //Enable pins interrupts
 
       // Now send CPU to sleep and wait for user to decide play mode
       // Bit-set (LPM3_bits + GIE) in SR register to enter LPM3 mode
@@ -529,22 +513,21 @@ void game_update(void)
       }
 
       if(yR2bonus < (LCD_ROW >> 1)){
-                yR2bonus_previousPosition = yR2bonus;
-                yR2bonus += 1; //move racket 1 pixels down
-                R2bonusDir = DOWN;
+         yR2bonus_previousPosition = yR2bonus;
+         yR2bonus += 1; //move racket 1 pixels down
+         R2bonusDir = DOWN;
       }
 
       if(yR2bonus > (LCD_ROW >> 1)){
-                yR2bonus_previousPosition = yR2bonus;
-                yR2bonus -= 1; //move racket 1 pixels up
-                R2bonusDir = UP;
+         yR2bonus_previousPosition = yR2bonus;
+         yR2bonus -= 1; //move racket 1 pixels up
+         R2bonusDir = UP;
       }
 
       // When rackets are back in starting position, redraw them
       if( (yR1 == ( LCD_ROW >> 1 ) ) && (yR2 == (LCD_ROW >> 1 ) ) ){
 
           halLcdPrintXY( "                ", 10, 80, OVERWRITE_TEXT);
-          //halLcdPrintLine("                     ", 6, OVERWRITE_TEXT);//PRINT blanks where scorer was printed
 
           //Draw new racket1
           halLcdVLine(xR1, yR1 - HALF_RACKET_SIZE, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
@@ -572,7 +555,6 @@ void game_update(void)
           updateBannerString(bannerString,p1Score,p2Score,p1bonusEnabled,p2bonusEnabled);
           halLcdPrintLine(bannerString, 0, OVERWRITE_TEXT);//PRINT MESSAGE
 
-          //halLcdPrintLine("some scores", 1, OVERWRITE_TEXT);//PRINT MESSAGE
           if( (yR1 == (LCD_ROW >> 1)) && (yR2 == (LCD_ROW >> 1)) ) // if rackets in the correct starting position, proceed to next game state
               gameStateInstance = MOVING; // begin moving
           break;
@@ -580,7 +562,7 @@ void game_update(void)
   case MOVING: //moving objects in free space
 
          // first do projectiles if they are active....
-      if(p1bonusEnabled && p1Projectiles_active){
+    if(p1bonusEnabled && p1Projectiles_active){
 
           if( (p1Projectiles_pressed == 1) /*|| (p1Projectiles_onscreen == 0)*/ ) // if not on screen yet, give a starting position. Also resets start position if trigger is pressed again
           {
@@ -611,75 +593,67 @@ void game_update(void)
 
           p1Projectiles_pressed = 0;
 
-      }
+    }
 
 
+    // Update the ball position by the displacement amount
+    xBall = xBall + x_displacement;
+    yBall = yBall + y_displacement;
 
-          xBall = xBall + x_displacement;
-          yBall = yBall + y_displacement;
+    if(top_wall_reached()){
+        y_displacement *= -1; // flip the y direction of the ball
+    }
 
-          if(top_wall_reached()){
-              y_displacement *= -1; // flip the y direction of the ball
-          }
+    if(bottom_wall_reached()){
+        y_displacement *= -1; // flip the y direction of the ball
+    }
 
-          if(bottom_wall_reached()){
-              y_displacement *= -1; // flip the y direction of the ball
-          }
+    if(P1_racket_hit()){
+        LastHitterInstance = P1;
+        x_displacement = +1; // 'bounce' the ball off the racket and keep it moving toward opposite side
+        racket_movement_effect(1); // check to see if racket is moving or not, and add to the ball's direction displacement depending on this
+        if(AI_enabled) // if AI is playing, change it's hitting movement direction
+           toggle_AI_direction /*= toggle_AI_direction;*/  *= -1;
+    }
 
-          if(P1_racket_hit()){
-              LastHitterInstance = P1;
-              x_displacement = +1; // 'bounce' the ball off the racket and keep it moving toward opposite side
-              racket_movement_effect(1); // check to see if racket is moving or not, and add to the ball's direction displacement depending on this
-              if(AI_enabled) // if AI is playing, change it's hitting movement direction
-                                toggle_AI_direction /*= toggle_AI_direction;*/  *= -1;
-          }
+    // Check ball against player2 bonus racket
+    if(p2bonusEnabled == 1){
+        if(P2_bonus_racket_hit()){
+            LastHitterInstance = P2;
+            x_displacement = -1;// 'bounce' the ball off the racket and keep it moving toward opposite side
+        }
+    }
 
-          // Check ball against player2 bonus racket
-          if(p2bonusEnabled == 1){
-              if(P2_bonus_racket_hit()){
-                  LastHitterInstance = P2;
-                  x_displacement = -1;// 'bounce' the ball off the racket and keep it moving toward opposite side
+    if(P2_racket_hit()){
+        LastHitterInstance = P2;
+        x_displacement = -1;// 'bounce' the ball off the racket and keep it moving toward opposite side
+        racket_movement_effect(2); // check to see if racket is moving or not, and add to the ball's direction displacement depending on this
+    }
 
-              }
-          }
+    //check left and right wall strikes
+    if(left_wall_reached()){
+        P2IE &= ( BIT7 + BIT6 + BIT5 + BIT4 + BIT2); //disable pins interrupts temprorarily
+        Scorer =  PLAYER2;
+        p2Score += 1; // Increment player2 score
+        updateScoreString(scoreString,2); // Update the score string with the latest player who scored
+        gameStateInstance = SCORING;
+        x_displacement = -1; // When play restarts ball will go toward P2
+    }
+    if(right_wall_reached()){
+        P2IE &= ( BIT7 + BIT6 + BIT5 + BIT4 + BIT2); //disable pins interrupts temprorarily
+        Scorer =  PLAYER1;
+        p1Score += 1; // Increment player1 score
+        updateScoreString(scoreString,1); // Update the score string with the latest player who scored
+        gameStateInstance = SCORING;
+        x_displacement = +1; // When play restarts ball will go toward P1
 
-          if(P2_racket_hit()){
-              LastHitterInstance = P2;
-              x_displacement = -1;// 'bounce' the ball off the racket and keep it moving toward opposite side
-              racket_movement_effect(2); // check to see if racket is moving or not, and add to the ball's direction displacement depending on this
+    }
 
-          }
-
-          //check left and right wall strikes
-          if(left_wall_reached()){
-              P2IE &= ( BIT7 + BIT6 + BIT5 + BIT4 + BIT2); //disable pins interrupts temprorarily
-              Scorer =  PLAYER2;
-              p2Score += 1; // Increment player2 score
-              updateScoreString(scoreString,2); // Update the score string with the latest player who scored
-              gameStateInstance = SCORING;
-              x_displacement = -1; // When play restarts ball will go toward P2
-          }
-          if(right_wall_reached()){
-              P2IE &= ( BIT7 + BIT6 + BIT5 + BIT4 + BIT2); //disable pins interrupts temprorarily
-              Scorer =  PLAYER1;
-              p1Score += 1; // Increment player1 score
-              updateScoreString(scoreString,1); // Update the score string with the latest player who scored
-              gameStateInstance = SCORING;
-              x_displacement = +1; // When play restarts ball will go toward P1
-
-          }
-
-          break;
+    break;
   case SCORING:
 
-      // temporarily disable interrupts while information is printed...
-      //P2IE &= ( BIT7 + BIT6 + BIT5 + BIT4 + BIT2);
-
-
-
-          //Handle scoring and winning
-          //halLcdClearScreen(); //CLEAR SCREEN
-          switch(Scorer){
+    //Handle scoring and winning
+    switch(Scorer){
           case PLAYER1:
 
               if(p1Score == winningScore){
@@ -703,10 +677,10 @@ void game_update(void)
                   //halLcdPrintLine(scoreString, 1, OVERWRITE_TEXT);//PRINT current scorer as scoring a goal
                   updateBannerString(bannerString,p1Score,p2Score,p1bonusEnabled,p2bonusEnabled);
                   halLcdPrintLine(bannerString, 0, OVERWRITE_TEXT);//PRINT MESSAGE
-                  halLcdPrintLine(winningString, 2, OVERWRITE_TEXT);//PRINT MESSAGE
+                  //halLcdPrintLine(winningString, 2, OVERWRITE_TEXT);//PRINT MESSAGE
 
                   updateScoreString(scoreString,1);
-                  halLcdPrintXY( scoreString, 10, 80, OVERWRITE_TEXT);
+                  halLcdPrintXY( scoreString, 10, 80, OVERWRITE_TEXT); // Print GOAL SCORED while game paused
                   //halLcdPrintLine(scoreString, 6, OVERWRITE_TEXT);//PRINT current scorer as scoring a goal
 
                   gameStateInstance = STARTING;
@@ -736,60 +710,29 @@ void game_update(void)
                   halLcdPrintLine(bannerString, 0, OVERWRITE_TEXT);//PRINT MESSAGE
 
                   updateScoreString(scoreString,2);
-                  halLcdPrintXY( scoreString, 10, 80, OVERWRITE_TEXT);
+                  halLcdPrintXY( scoreString, 10, 80, OVERWRITE_TEXT);// Print GOAL SCORED while game paused
                   //halLcdPrintLine(scoreString, 6, OVERWRITE_TEXT);//PRINT current scorer as scoring a goal
 
                   gameStateInstance = STARTING;
                   //halLcdPrintLine("some p2 scores", 1, OVERWRITE_TEXT);//PRINT MESSAGE
               }
               break;
-          }
+    }
 
+        break;
 
+    case WINNING:
 
-          break;
+        halLcdPrintLine("   GAME OVER    ", 0, OVERWRITE_TEXT);//Overwrite banner with 'GAME OVER'
+        updateCurrentScoresString(currentScoresString,p1Score,p2Score); // Update the current scores string with current player scores
+        halLcdPrintLine(currentScoresString,4,OVERWRITE_TEXT);  // print to LCD
+        halLcdPrintLine(" Press an input   or Reset btn", 5, OVERWRITE_TEXT);//PRINT MESSAGE
+        halLcdPrintLine(" to continue", 7, OVERWRITE_TEXT);//PRINT MESSAGE
 
-          case WINNING:
+    break;
+    } // end of switch gameStateInstance
 
-              halLcdPrintLine("   GAME OVER    ", 0, OVERWRITE_TEXT);//Overwrite banner with 'GAME OVER'
-              updateCurrentScoresString(currentScoresString,p1Score,p2Score); // Update the current scores string with current player scores
-              halLcdPrintLine(currentScoresString,4,OVERWRITE_TEXT);  // print to LCD
-
-              halLcdPrintLine(" Press an input   or Reset btn", 5, OVERWRITE_TEXT);//PRINT MESSAGE
-              halLcdPrintLine(" to continue", 7, OVERWRITE_TEXT);//PRINT MESSAGE
-
-
-
-          //TimerB0Init(); // initialise timerB as a way of providing a timeout and preventing further interrupts for some time
-
-          // Now stop TimerB0
-          //TB0CTL    = TBSSEL_1 + MC_0 + TBCLR + TBIE;
-/*
-          //stop TimerA1. This prevents new LCD and ball updates
-          //but user input is operational thanks to Port2 interrupts
-          TA1CTL= TA1CTL & ~(BIT5 + BIT4); //MC=00 (bits 5,4) 0b11001111
-
-          //Re-enable interrupts
-          //P2IE |= ( BIT7 + BIT6 + BIT5 + BIT4 + BIT2);
-
-          // Bit-set (LPM3_bits + GIE) in SR register to enter LPM3 mode
-          __bis_SR_register(LPM3_bits + GIE);
-          __no_operation(); //for debug
-*/
-
-          /*MIGHT WANT TO THINK ABOUT HAVING A TIMEOUT BEFORE IT CONTINUES BY ITSELF BACK TO START*/
-          /*
-           * START TIMER AND GO INTO LPM
-           *
-           * CREATE TIMEOUT ISR WHICH SETS STATE TO STARTING
-           *
-           * */
-
-         break;
-
- }
     // Bit-set (LPM3_bits + GIE) in SR register to enter LPM3 mode
     __bis_SR_register(LPM3_bits + GIE);
     __no_operation(); //for debug
-
 }
