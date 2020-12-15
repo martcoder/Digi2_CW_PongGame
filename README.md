@@ -39,6 +39,7 @@ Gameplay Features added to this include:
 - SPLASH SCREENS: Players can continue after splash screens by pressing an input, which 
   triggers the input interrupt ISR which ensures things carry on smoothly.
   E.g. the intro menu screen, or the GAME OVER screen. 
+- START OF GAME: Added start of game splash screen welcoming players to Pong!
 - END OF GAME: Added End of Game. first player to reach the winning score wins the game. 
   Then by pressing an input or the Reset btn, the game will start again. 
 

@@ -242,8 +242,14 @@ void updateBannerString(volatile char* bannerString,int p1score, int p2score, in
     bannerString[7] = 'v';
     bannerString[8] = 's';
     bannerString[9] = ' ';
-    bannerString[10] = 'P';
-    bannerString[11] = '2';
+    if(AI_enabled == 1){
+     bannerString[10] = 'A';
+     bannerString[11] = 'I';
+    }
+    else{
+     bannerString[10] = 'P';
+     bannerString[11] = '2';
+    }
     bannerString[12] = ':';
     bannerString[13] = p2score+'0';
     bannerString[14] = ' ';
@@ -257,13 +263,24 @@ void updateBannerString(volatile char* bannerString,int p1score, int p2score, in
 // Constructs the winning score string, later printed to LCD
 void updateWinningScoreString(volatile char* winningString, int scorer){
 
-    winningString[0]= 'P';
-    winningString[1]= 'L';
-    winningString[2]= 'A';
-    winningString[3]= 'Y';
-    winningString[4]= 'E';
-    winningString[5]= 'R';
-    winningString[6]= scorer + '0';
+    if( (AI_enabled == 1) && (scorer == 2) ){
+        winningString[0]= ' ';
+        winningString[1]= ' ';
+        winningString[2]= 'A';
+        winningString[3]= 'I';
+        winningString[4]= ' ';
+        winningString[5]= ' ';
+        winningString[6]= ' ';
+    }
+    else{
+        winningString[0]= 'P';
+        winningString[1]= 'L';
+        winningString[2]= 'A';
+        winningString[3]= 'Y';
+        winningString[4]= 'E';
+        winningString[5]= 'R';
+        winningString[6]= scorer + '0';
+    }
     winningString[7]= ' ';
     winningString[8]= 'W';
     winningString[9]= 'I';
@@ -281,13 +298,24 @@ void updateScoreString(volatile char* scoreString, int scorer){
     scoreString[3]  = 'A';
     scoreString[4]= 'L';
     scoreString[5]= ' ';
-    scoreString[6]= 'P';
-    scoreString[7]= 'L';
-    scoreString[8]= 'A';
-    scoreString[9]= 'Y';
-    scoreString[10]= 'E';
-    scoreString[11]= 'R';
-    scoreString[12]= scorer + '0';
+    if((AI_enabled == 1) && (scorer == 2) ){
+        scoreString[6]= ' ';
+        scoreString[7]= ' ';
+        scoreString[8]= 'A';
+        scoreString[9]= 'I';
+        scoreString[10]= ' ';
+        scoreString[11]= ' ';
+        scoreString[12]= ' ';
+    }
+    else{
+        scoreString[6]= 'P';
+        scoreString[7]= 'L';
+        scoreString[8]= 'A';
+        scoreString[9]= 'Y';
+        scoreString[10]= 'E';
+        scoreString[11]= 'R';
+        scoreString[12]= scorer + '0';
+    }
     scoreString[13]= '\0';
 }
 
@@ -303,8 +331,14 @@ void updateCurrentScoresString(volatile char* currentScoresString, volatile int 
     currentScoresString[6]= p1Score+'0';
     currentScoresString[7]= ' ';
     currentScoresString[8]= ' ';
-    currentScoresString[9]= 'P';
-    currentScoresString[10]= '2';
+    if((AI_enabled == 1)){
+        currentScoresString[9]= 'A';
+        currentScoresString[10]= 'I';
+    }
+    else{
+        currentScoresString[9]= 'P';
+        currentScoresString[10]= '2';
+    }
     currentScoresString[11]= ':';
     currentScoresString[12]= ' ';
     currentScoresString[13]= p2Score+'0';
@@ -413,6 +447,27 @@ void game_update(void)
  //calculate new position and bouncing
  switch(gameStateInstance)
  {
+ case LOADING:
+
+           halLcdClearScreen(); //CLEAR SCREEN
+
+           halLcdPrintLine("Welcome Back To:", 1, OVERWRITE_TEXT);//PRINT MESSAGE ......... NB ADD SCORES TO THE SCREEN
+           halLcdPrintLine("The Days Of...:", 2, OVERWRITE_TEXT);//PRINT MESSAGE
+           halLcdPrintLine("  -----------  ", 3, OVERWRITE_TEXT);//PRINT MESSAGE
+           halLcdPrintLine("   P     N   ", 4, OVERWRITE_TEXT);//PRINT MESSAGE
+           halLcdPrintLine("      O     G ", 5, OVERWRITE_TEXT);//PRINT MESSAGE
+           halLcdPrintLine("  ------------  ", 6, OVERWRITE_TEXT);//PRINT MESSAGE
+           halLcdPrintLine("Move JOYSTICK UP", 7, OVERWRITE_TEXT);//PRINT MESSAGE
+
+           //stop TimerA1. This prevents new LCD and ball updates
+                 //but user input is operational as Port2 interrupts can still be triggered
+                 TA1CTL= TA1CTL & ~(BIT5 + BIT4); //MC=00 (bits 5,4) 0b11001111
+                 // Now send CPU to sleep and wait for user to proceed
+                       // Bit-set (LPM3_bits + GIE) in SR register to enter LPM3 mode
+                       __bis_SR_register(LPM3_bits + GIE);
+                       __no_operation(); //for debug
+
+     break;
   case INTRO: // Game intro is happening, e.g. menu selection
 
       //P2IE &= ( BIT7 + BIT6 + BIT5 + BIT4 + BIT2); //disable pins interrupts temporarily

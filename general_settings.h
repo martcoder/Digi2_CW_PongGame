@@ -39,7 +39,7 @@ volatile unsigned int LCDUpdatePending;
 volatile unsigned int ContinuousPressChecker;
 
 //Game state
-enum gameState {INTRO,STARTING,MOVING,SCORING,WINNING};
+enum gameState {LOADING,INTRO,STARTING,MOVING,SCORING,WINNING};
 volatile enum gameState gameStateInstance; //Current game state
 volatile int newPositionsDrawn;
 volatile int newAIPositionsDrawn;
