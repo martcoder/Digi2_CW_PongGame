@@ -211,8 +211,6 @@ void LCD_update(void)
          halLcdHLine(p1ProjectileA_X-PROJECTILE_HALF_SIZE, p1ProjectileA_X+PROJECTILE_HALF_SIZE, p1ProjectileA_Y , PIXEL_ON);
          halLcdHLine(p1ProjectileB_X-PROJECTILE_HALF_SIZE, p1ProjectileB_X+PROJECTILE_HALF_SIZE, p1ProjectileB_Y, PIXEL_ON);
 
-
-
          // Update older positions
          p1ProjectileA_X_old2 = p1ProjectileA_X_old;
          p1ProjectileA_Y_old2 = p1ProjectileA_Y_old;

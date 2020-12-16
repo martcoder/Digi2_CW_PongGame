@@ -112,7 +112,7 @@ void handle_bonus_projectile_hitting_ball(void){
 
     // If the ball meets the projectile, destroy projectile, then flip the ball x and y directions
             if(
-                  (
+                  (       // ball x coordinate is within 2*projectileLength of projectileA x value
                           ( xBall <= ( p1ProjectileA_X + (PROJECTILE_HALF_SIZE << 1) ) )
                           &&
                           ( xBall >= ( p1ProjectileA_X - (PROJECTILE_HALF_SIZE << 1) ) )
@@ -132,8 +132,8 @@ void handle_bonus_projectile_hitting_ball(void){
                 p1Projectiles_onscreen = 0;
 
 
-                x_displacement *= -1;
-                y_displacement *- -1;
+                x_displacement = (~x_displacement)+1;
+                y_displacement = (~y_displacement)+1;
             }
             // If the ball meets the projectile, destroy the projectile, and flip the ball displacement
             if(
@@ -153,26 +153,26 @@ void handle_bonus_projectile_hitting_ball(void){
 
                 clearProjectiles();
 
-                x_displacement *= -1;
-                y_displacement *- -1;
+                x_displacement = (~x_displacement)+1;
+                y_displacement = (~y_displacement)+1;
             }
 }
 
 void game_load(void){
 
-               halLcdClearScreen(); //CLEAR SCREEN
+          halLcdClearScreen(); //CLEAR SCREEN
 
-               halLcdPrintLine("Welcome Back To:", 1, OVERWRITE_TEXT);//PRINT MESSAGE ......... NB ADD SCORES TO THE SCREEN
-               halLcdPrintLine("The Days Of...:", 2, OVERWRITE_TEXT);//PRINT MESSAGE
-               halLcdPrintLine("  -----------  ", 3, OVERWRITE_TEXT);//PRINT MESSAGE
-               halLcdPrintLine("   P     N   ", 4, OVERWRITE_TEXT);//PRINT MESSAGE
-               halLcdPrintLine("      O     G ", 5, OVERWRITE_TEXT);//PRINT MESSAGE
-               halLcdPrintLine("  ------------  ", 6, OVERWRITE_TEXT);//PRINT MESSAGE
-               halLcdPrintLine("Move JOYSTICK UP", 7, OVERWRITE_TEXT);//PRINT MESSAGE
+          halLcdPrintLine("Welcome Back To:", 1, OVERWRITE_TEXT);//PRINT MESSAGE ......... NB ADD SCORES TO THE SCREEN
+          halLcdPrintLine("The Days Of...:", 2, OVERWRITE_TEXT);//PRINT MESSAGE
+          halLcdPrintLine("  -----------  ", 3, OVERWRITE_TEXT);//PRINT MESSAGE
+          halLcdPrintLine("   P     N   ", 4, OVERWRITE_TEXT);//PRINT MESSAGE
+          halLcdPrintLine("      O     G ", 5, OVERWRITE_TEXT);//PRINT MESSAGE
+          halLcdPrintLine("  ------------  ", 6, OVERWRITE_TEXT);//PRINT MESSAGE
+          halLcdPrintLine("Move JOYSTICK UP", 7, OVERWRITE_TEXT);//PRINT MESSAGE
 
-               //stop TimerA1. This prevents new LCD and ball updates
-               //but user input is operational as Port2 interrupts can still be triggered
-               TA1CTL= TA1CTL & ~(BIT5 + BIT4); //MC=00 (bits 5,4) 0b11001111
+          //stop TimerA1. This prevents new LCD and ball updates
+          //but user input is operational as Port2 interrupts can still be triggered
+          TA1CTL= TA1CTL & ~(BIT5 + BIT4); //MC=00 (bits 5,4) 0b11001111
 }
 
 void game_intro(void){
@@ -250,6 +250,7 @@ void game_start(void){
                   halLcdVLine(xR2bonus-3, yR2bonus - QUARTER_RACKET_SIZE, yR2bonus + QUARTER_RACKET_SIZE, PIXEL_ON);
                   halLcdVLine(xR2bonus- 4, yR2bonus - QUARTER_RACKET_SIZE, yR2bonus + QUARTER_RACKET_SIZE, PIXEL_ON);
               }
+
           }
 
            // Initial position of the ball
@@ -267,7 +268,7 @@ void game_start(void){
 }
 
 void moving(void){
-    // first do projectiles if they are active....
+        // first do projectiles if they are active....
         if(p1bonusEnabled && p1Projectiles_active){
 
               if( (p1Projectiles_pressed == 1) /*|| (p1Projectiles_onscreen == 0)*/ ) // if not on screen yet, give a starting position. Also resets start position if trigger is pressed again
@@ -279,7 +280,6 @@ void moving(void){
                   p1Projectiles_pressed = 0; // Clear the pressed variable
                   p1Projectiles_onscreen = 1; // Set variable to mark that player1 projectiles are now on-screen
               }
-
 
               // Move p1 projectile A position
               p1ProjectileA_X = p1ProjectileA_X + p1_projectileA_x_displacement;
@@ -298,20 +298,18 @@ void moving(void){
               }
 
               p1Projectiles_pressed = 0;
-
         }
-
 
         // Update the ball position by the displacement amount
         xBall = xBall + x_displacement;
         yBall = yBall + y_displacement;
 
         if(top_wall_reached()){
-            y_displacement *= -1; // flip the y direction of the ball
+            y_displacement = (~y_displacement)+1; // flip the y direction of the ball
         }
 
         if(bottom_wall_reached()){
-            y_displacement *= -1; // flip the y direction of the ball
+            y_displacement = (~y_displacement)+1; // flip the y direction of the ball
         }
 
         if(P1_racket_hit()){
@@ -319,7 +317,7 @@ void moving(void){
             x_displacement = +1; // 'bounce' the ball off the racket and keep it moving toward opposite side
             racket_movement_effect(1); // check to see if racket is moving or not, and add to the ball's direction displacement depending on this
             if(AI_enabled) // if AI is playing, change it's hitting movement direction
-               toggle_AI_direction /*= toggle_AI_direction;*/  *= -1;
+               toggle_AI_direction  = (~toggle_AI_direction)+1;
         }
 
         // Check ball against player2 bonus racket
@@ -338,7 +336,6 @@ void moving(void){
 
         //check left and right wall strikes
         if(left_wall_reached()){
-            P2IE &= ( BIT7 + BIT6 + BIT5 + BIT4 + BIT2); //disable pins interrupts temprorarily
             Scorer =  PLAYER2;
             p2Score += 1; // Increment player2 score
             updateScoreString(scoreString,2); // Update the score string with the latest player who scored
@@ -346,82 +343,79 @@ void moving(void){
             x_displacement = -1; // When play restarts ball will go toward P2
         }
         if(right_wall_reached()){
-            P2IE &= ( BIT7 + BIT6 + BIT5 + BIT4 + BIT2); //disable pins interrupts temprorarily
             Scorer =  PLAYER1;
             p1Score += 1; // Increment player1 score
             updateScoreString(scoreString,1); // Update the score string with the latest player who scored
             gameStateInstance = SCORING;
             x_displacement = +1; // When play restarts ball will go toward P1
-
         }
 }
 
 void player1scoring(void){
     if(p1Score == winningScore){
-                      updateWinningScoreString(winningString,1);
-                      halLcdPrintLine(winningString, 2, OVERWRITE_TEXT);//PRINT MESSAGE
-                      gameStateInstance = WINNING;
+        updateWinningScoreString(winningString,1);
+        halLcdPrintLine(winningString, 2, OVERWRITE_TEXT);//PRINT MESSAGE
+        gameStateInstance = WINNING;
     }
     else{
-                      if(p1Score == bonusScore){// check if player score has reached the bonus score
+        if(p1Score == bonusScore){// check if player score has reached the bonus score
                           BonusStatus = INPLAY;// set bonus to be in play
-                      }
-                      if(p2bonusCooldown > 0){ // decrement player2 bonus cooldown if opponent scores
+        }
+        if(p2bonusCooldown > 0){ // decrement player2 bonus cooldown if opponent scores
                           p2bonusCooldown--;
-                      }
-                      else{ // switch off player2 bonus
-                          p2bonusEnabled = 0;
-                          //also clear the bonus racket from the LCD
-                          halLcdVLine(xR2bonus-3, yR2bonus_previousPosition - QUARTER_RACKET_SIZE, yR2bonus_previousPosition + QUARTER_RACKET_SIZE, PIXEL_OFF);
-                          halLcdVLine(xR2bonus- 4, yR2bonus_previousPosition - QUARTER_RACKET_SIZE, yR2bonus_previousPosition + QUARTER_RACKET_SIZE, PIXEL_OFF);
-                      }
-                      //halLcdPrintLine(scoreString, 1, OVERWRITE_TEXT);//PRINT current scorer as scoring a goal
-                      updateBannerString(bannerString,p1Score,p2Score,p1bonusEnabled,p2bonusEnabled);
-                      halLcdPrintLine(bannerString, 0, OVERWRITE_TEXT);//PRINT MESSAGE
-                      //halLcdPrintLine(winningString, 2, OVERWRITE_TEXT);//PRINT MESSAGE
+        }
+        else{ // switch off player2 bonus
+            p2bonusEnabled = 0;
+            //also clear the bonus racket from the LCD
+            halLcdVLine(xR2bonus-3, yR2bonus_previousPosition - QUARTER_RACKET_SIZE, yR2bonus_previousPosition + QUARTER_RACKET_SIZE, PIXEL_OFF);
+            halLcdVLine(xR2bonus- 4, yR2bonus_previousPosition - QUARTER_RACKET_SIZE, yR2bonus_previousPosition + QUARTER_RACKET_SIZE, PIXEL_OFF);
+       }
 
-                      updateScoreString(scoreString,1);
-                      halLcdPrintXY( scoreString, 10, 80, OVERWRITE_TEXT); // Print GOAL SCORED while game paused
-                      //halLcdPrintLine(scoreString, 6, OVERWRITE_TEXT);//PRINT current scorer as scoring a goal
+       updateBannerString(bannerString,p1Score,p2Score,p1bonusEnabled,p2bonusEnabled);
+       halLcdPrintLine(bannerString, 0, OVERWRITE_TEXT);//PRINT MESSAGE
 
-                      gameStateInstance = STARTING;
-                      //halLcdPrintLine("some p1 scores", 1, OVERWRITE_TEXT);//PRINT MESSAGE
+       updateScoreString(scoreString,1);
+       halLcdPrintXY( scoreString, 10, 80, OVERWRITE_TEXT); // Print GOAL <player> while game paused
+
+       gameStateInstance = STARTING;
    }
 }
 void player2scoring(void){
     if(p2Score == winningScore){
-                      updateWinningScoreString(winningString,2);
-                      halLcdPrintLine(winningString, 2, OVERWRITE_TEXT);//PRINT MESSAGE
-                      gameStateInstance = WINNING;
+         updateWinningScoreString(winningString,2);
+         halLcdPrintLine(winningString, 2, OVERWRITE_TEXT);//PRINT MESSAGE
+         gameStateInstance = WINNING;
     }
     else{
 
-                      if(p2Score == bonusScore){// check if player score has reached the bonus score
-                         BonusStatus = INPLAY; // set bonus to be in play
-                      }
-                      if(p1bonusCooldown > 0){ // decrement player1 bonus cooldown if opponent scores
-                         p1bonusCooldown--;
-                      }
-                      else{ // switch off player1 bonus
-                          p1bonusEnabled = 0;
-                      }
+        if(p2Score == bonusScore){// check if player score has reached the bonus score
+            BonusStatus = INPLAY; // set bonus to be in play
+        }
+        if(p1bonusCooldown > 0){ // decrement player1 bonus cooldown if opponent scores
+            p1bonusCooldown--;
+        }
+        else{ // switch off player1 bonus
+            p1bonusEnabled = 0;
+        }
 
-                      updateBannerString(bannerString,p1Score,p2Score,p1bonusEnabled,p2bonusEnabled);
-                      halLcdPrintLine(bannerString, 0, OVERWRITE_TEXT);//PRINT MESSAGE
+        updateBannerString(bannerString,p1Score,p2Score,p1bonusEnabled,p2bonusEnabled);
+        halLcdPrintLine(bannerString, 0, OVERWRITE_TEXT);//PRINT MESSAGE
 
-                      updateScoreString(scoreString,2);
-                      halLcdPrintXY( scoreString, 10, 80, OVERWRITE_TEXT);// Print GOAL SCORED while game paused
-                      //halLcdPrintLine(scoreString, 6, OVERWRITE_TEXT);//PRINT current scorer as scoring a goal
+        updateScoreString(scoreString,2);
+        halLcdPrintXY( scoreString, 10, 80, OVERWRITE_TEXT);// Print GOAL <player> while game paused
 
-                      gameStateInstance = STARTING;
-                      //halLcdPrintLine("some p2 scores", 1, OVERWRITE_TEXT);//PRINT MESSAGE
+        gameStateInstance = STARTING;
     }
 }
 
 void winning(void){
     halLcdPrintLine("   GAME OVER    ", 0, OVERWRITE_TEXT);//Overwrite banner with 'GAME OVER'
-            updateCurrentScoresString(currentScoresString,p1Score,p2Score); // Update the current scores string with current player scores
-            halLcdPrintLine(currentScoresString,4,OVERWRITE_TEXT);  // print to LCD
-            halLcdPrintLine(" Press an input   or Reset btn", 5, OVERWRITE_TEXT);//PRINT MESSAGE
-            halLcdPrintLine(" to continue", 7, OVERWRITE_TEXT);//PRINT MESSAGE
+    updateCurrentScoresString(currentScoresString,p1Score,p2Score); // Update the current scores string with current player scores
+    halLcdPrintLine(currentScoresString,4,OVERWRITE_TEXT);  // print to LCD
+    halLcdPrintLine(" Press an input   or Reset btn", 5, OVERWRITE_TEXT);//PRINT MESSAGE
+    halLcdPrintLine(" to continue", 7, OVERWRITE_TEXT);//PRINT MESSAGE
+
+    //stop TimerA1. This prevents new LCD and ball updates
+    //but user input is operational as Port2 interrupts can still be triggered
+    TA1CTL= TA1CTL & ~(BIT5 + BIT4); //MC=00 (bits 5,4) 0b11001111
 }

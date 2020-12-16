@@ -155,6 +155,9 @@ __interrupt void my_Port2_ISR(void)
             // Clear LCD
             LCDInit();
 
+            // Restart TimerA
+            TimerA1Init();
+
             // Change game state to starting
             GameStartInit();
 
