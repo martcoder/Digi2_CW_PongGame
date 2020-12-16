@@ -51,9 +51,13 @@ Other Features:
   inifinite loop and do actions based on which vars had been set, e.g. a var 
   to update positions, a var for updating ball position. The original code 
   had a timer for ball and lcd update timings, and another for user input. 
-- The second timer was scrapped and user inputs were configured to trigger 
-  interrupts instead, with the ISR setting the variable. 
-  The Timer which was being used for ball and lcd updates does this by waking 
+- Instead of using the second Timer all timings were done with only TimerA. 
+  User inputs were configured to trigger Port2 interrupts instead, with the 
+  ISR setting the update variable. 
+  TimerA which was being used for ball and lcd updates does this by waking 
   the CPU, so this has been used as an opportunity to also carry out other CPU 
   tasks such as updating positions and actions based on user input. The upshot 
   is that there is one less timer being used, which saves power. 
+- TimerA gets switched off during splash screens requesting user input to continue
+- Bitwise operations were used rather than multiplication, for example when flipping
+  directions instead of multipling by -1, instead invert ~ then add 1. 
