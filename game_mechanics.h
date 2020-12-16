@@ -7,14 +7,23 @@
 
 #ifndef GAME_MECHANICS_H_
 #define GAME_MECHANICS_H_
+#endif /* GAME_MECHANICS_H_ */
 
-void updateBannerString(volatile char* bannerString,int p1score, int p2score, int p1bonusEnabled, int p2bonusEnabled);
-void updateWinningScoreString(volatile char* winningString, int scorer);
-void updateScoreString(volatile char* scoreString, int scorer);
-void updateCurrentScoresString(volatile char* currentScoresString, int p1score, int p2score);
-void clearProjectiles(void);
-void resetProjectiles(void);
-void powerUpProjectiles(void);
+#include "game_mechanics_auxiliary.h"
+
 void game_update(void);
 
-#endif /* GAME_MECHANICS_H_ */
+// bonus related functions
+void bonus_enable(void);
+void handle_bonus_projectile_hitting_ball(void);
+
+// game state related functions
+void game_load(void);
+void game_intro(void);
+void game_start(void);
+void moving(void);
+void player1scoring(void);
+void player2scoring(void);
+void winning(void);
+
+
