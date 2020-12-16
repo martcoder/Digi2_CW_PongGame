@@ -1,28 +1,35 @@
 #include "pong_auxiliary.h"
 
+/*
+ * Move AI racket toward the y-value of the ball
+ * unless the ball is very close to the racket in which case do a 'human movement' to send the ball off at an angle
+ * */
 void ai_movement(void){
     if(newAIPositionsDrawn ==1){
         newAIPositionsDrawn = 0;
 
-        if( (xBall < (LCD_COL - 6)) && (yR2 > (HALF_RACKET_SIZE+13)) && (yR2 > yBall) ){ // if AI racket not hitting top wall, and also lower than the ball, move racket up, unless ball is close to racket
+        // if AI racket not hitting top wall, and also lower than the ball, move racket up, unless ball is close to racket
+        if( (xBall < (LCD_COL - 6)) && (yR2 > (HALF_RACKET_SIZE+13)) && (yR2 > yBall) ){
             yR2_previousPosition = yR2;
             //yR2_old = yR2;
             yR2 -= 1; //move racket 1 pixels up
             R2Dir = UP;
 
+            // Also adjust the bonus racket position if it is active
             if(p2bonusEnabled == 1){
-                          if ( yR2bonus < (LCD_ROW - QUARTER_RACKET_SIZE)  ) //avoid going lower than bottom of LCD
-                          {
-                              yR2bonus_previousPosition = yR2bonus;
-                              //yR2bonus_old = yR2bonus;
-                              yR2bonus += 1; //move racket 1 pixels down (opposite of player2 standard racket)
-                          }
-                          R2bonusDir = DOWN;
+                if ( yR2bonus < (LCD_ROW - QUARTER_RACKET_SIZE)  ) //avoid going lower than bottom of LCD
+                {
+                    yR2bonus_previousPosition = yR2bonus;
+                    //yR2bonus_old = yR2bonus;
+                    yR2bonus += 1; //move racket 1 pixels down (opposite of player2 standard racket)
+                }
+                R2bonusDir = DOWN;
             }
 
             return;
         }
-        if( (xBall < (LCD_COL - 6)) && (yR2 < (LCD_ROW - HALF_RACKET_SIZE)) && (yR2 < yBall) ){ // if AI racket not hitting bottom wall, and also higher than ball, move racket down, unless ball is close to racket
+        // if AI racket not hitting bottom wall, and also higher than ball, move racket down, unless ball is close to racket
+        if( (xBall < (LCD_COL - 6)) && (yR2 < (LCD_ROW - HALF_RACKET_SIZE)) && (yR2 < yBall) ){
             yR2_previousPosition = yR2;
             //yR2_old = yR2;
             yR2 += 1; //move racket 1 pixels down
@@ -31,16 +38,16 @@ void ai_movement(void){
             if(p2bonusEnabled == 1){
               if ( yR2bonus > (QUARTER_RACKET_SIZE + 13)  ) //avoid going higher than top wall
               {
-                                      yR2bonus_previousPosition = yR2bonus;
-                                      //yR2bonus_old = yR2bonus;
-                                      yR2bonus -= 1; //move racket 1 pixels up (opposite of player2 standard racket)
+                   yR2bonus_previousPosition = yR2bonus;
+                   //yR2bonus_old = yR2bonus;
+                   yR2bonus -= 1; //move racket 1 pixels up (opposite of player2 standard racket)
               }
               R2bonusDir = UP;
             }
 
             return;
         }
-        // 'human movement' if ball is close to the racket
+        // check racket is not against ceiling, then 'human movement' upward if ball is close to the racket
         if(xBall > (LCD_COL - 6) && (yR2 > (HALF_RACKET_SIZE+13)) ){
             if(toggle_AI_direction > 0){
                 yR2_previousPosition = yR2;
@@ -49,6 +56,9 @@ void ai_movement(void){
                 R2Dir = UP;
                 return;
             }
+
+         }
+         // if racket is not against the floor, 'human movement' downward if ball is close to the racket
          if( (xBall > (LCD_COL - 6)) && (yR2 < (LCD_ROW - HALF_RACKET_SIZE)))
          {
              if(toggle_AI_direction < 0){
@@ -59,13 +69,12 @@ void ai_movement(void){
                 return;
              }
           }
-
-
-        }
     }
 }
 
-//Read user inputs here (CPU is awaken by ADC12 conversion)
+/*
+ * Check if player inputs are being pressed, and adjust racket positions accordingly
+ * */
 void UserInputs_update(void)
 {
   if(newPositionsDrawn == 1){
@@ -156,7 +165,7 @@ void UserInputs_update(void)
   }
 }
 
-//Update drawings in LCD screen (CPU is awaken by TimerA1 interval ints)
+//Update drawings in LCD screen (CPU is woken after 9 TimerA1 intervals)
 void LCD_update(void)
 {
 
@@ -193,19 +202,16 @@ void LCD_update(void)
          bonusDrawn = 0; // clear the bonus drawn variable
      }
 
+     // Undraw and draw projectile positions
      if( (p1bonusEnabled == 1) && (p1Projectiles_onscreen == 1)  ){
 
          // Clear old projectiles
-
          halLcdHLine(p1ProjectileA_X_old2 - PROJECTILE_HALF_SIZE, p1ProjectileA_X_old2 + PROJECTILE_HALF_SIZE, p1ProjectileA_Y_old2, PIXEL_OFF);
          halLcdHLine(p1ProjectileB_X_old2 -PROJECTILE_HALF_SIZE, p1ProjectileB_X_old2 + PROJECTILE_HALF_SIZE, p1ProjectileB_Y_old2, PIXEL_OFF);
-                  // draw new line on racket
-
 
          // Draw projectile trails
          halLcdHLine(p1ProjectileA_X_old-PROJECTILE_HALF_SIZE, p1ProjectileA_X_old+PROJECTILE_HALF_SIZE, p1ProjectileA_Y_old, PIXEL_ON);
          halLcdHLine(p1ProjectileB_X_old-PROJECTILE_HALF_SIZE, p1ProjectileB_X_old +PROJECTILE_HALF_SIZE, p1ProjectileB_Y_old, PIXEL_ON);
-
 
          // Draw new projectile positions
          halLcdHLine(p1ProjectileA_X-PROJECTILE_HALF_SIZE, p1ProjectileA_X+PROJECTILE_HALF_SIZE, p1ProjectileA_Y , PIXEL_ON);
@@ -221,10 +227,9 @@ void LCD_update(void)
          p1ProjectileB_Y_old2 = p1ProjectileB_Y_old;
          p1ProjectileB_X_old = p1ProjectileB_X;
          p1ProjectileB_Y_old = p1ProjectileB_Y;
-
      }
 
-
+     // Undraw old racket positions, draw new positions
      if(R1Dir == UP){
          //clear old racket1 bottom line
          halLcdHLine(xR1_old, xR1_old+2, yR1_previousPosition + HALF_RACKET_SIZE, PIXEL_OFF);
@@ -244,6 +249,7 @@ void LCD_update(void)
                  halLcdHLine(xR1+3, xR1+5, yR1 + HALF_RACKET_SIZE, PIXEL_ON);
           }
       }
+     // Undraw old racket positions, draw new positions
       if(R1Dir == DOWN){
 
           //clear old racket1 top line
@@ -267,6 +273,7 @@ void LCD_update(void)
           }
       }
 
+      // Undraw old racket positions, draw new positions
       if(R2Dir == UP){
                   //clear old racket2 bottom line
                   halLcdHLine(xR2_old, xR2_old-2, yR2_previousPosition + HALF_RACKET_SIZE, PIXEL_OFF);
@@ -275,15 +282,13 @@ void LCD_update(void)
 
                   // if p2bonus is enabled, show player2 inverse racket which is half the size of the normal racket
                   if(p2bonusEnabled){
-
                       //clear old racket top line
-                                            halLcdHLine(xR2bonus_old-3, xR2bonus_old-5, yR2bonus_previousPosition - QUARTER_RACKET_SIZE, PIXEL_OFF);
-                                            // draw new line on racket
-                                            halLcdHLine(xR2bonus-3, xR2bonus-5, yR2bonus + QUARTER_RACKET_SIZE, PIXEL_ON);
-
-
+                      halLcdHLine(xR2bonus_old-3, xR2bonus_old-5, yR2bonus_previousPosition - QUARTER_RACKET_SIZE, PIXEL_OFF);
+                      // draw new line on racket
+                      halLcdHLine(xR2bonus-3, xR2bonus-5, yR2bonus + QUARTER_RACKET_SIZE, PIXEL_ON);
                   }
       }
+      // Undraw old racket positions, draw new positions
       if(R2Dir == DOWN){
                   //clear old racket2
                   halLcdHLine(xR2_old, xR2_old-2, yR2_previousPosition - HALF_RACKET_SIZE, PIXEL_OFF);
@@ -293,32 +298,39 @@ void LCD_update(void)
                   // if p2bonus is enabled, show player2 inverse racket which is half the size of the normal racket
                   if(p2bonusEnabled){
                       //clear old bonusracket2 bottom line
-                                            halLcdHLine(xR2bonus_old-3, xR2bonus_old-5, yR2bonus_previousPosition + QUARTER_RACKET_SIZE, PIXEL_OFF);
-                                            // draw new line on racket
-                                            halLcdHLine(xR2bonus-3, xR2bonus-5, yR2bonus - QUARTER_RACKET_SIZE, PIXEL_ON);
+                      halLcdHLine(xR2bonus_old-3, xR2bonus_old-5, yR2bonus_previousPosition + QUARTER_RACKET_SIZE, PIXEL_OFF);
+                      // draw new line on racket
+                      halLcdHLine(xR2bonus-3, xR2bonus-5, yR2bonus - QUARTER_RACKET_SIZE, PIXEL_ON);
                   }
       }
 
-          xR1_old = xR1;
-          yR1_old = yR1;
-          xR2_old = xR2;
-          yR2_old = yR2;
-          if(p2bonusEnabled){
-              xR2bonus_old = xR2bonus;
-              yR2bonus_old = yR2bonus;
-          }
+      // Update old position values
+      xR1_old = xR1;
+      yR1_old = yR1;
+      xR2_old = xR2;
+      yR2_old = yR2;
 
-          newPositionsDrawn = 1;
-          newAIPositionsDrawn = 1;
+      // Update old position values for bonus racket
+      if(p2bonusEnabled){
+           xR2bonus_old = xR2bonus;
+           yR2bonus_old = yR2bonus;
+      }
+
+      // Mark new positions are having been drawn
+      newPositionsDrawn = 1;
+      newAIPositionsDrawn = 1;
 }
 
 /*********************************************************
  ********** Game States initializations ***********************
  *********************************************************/
+
+// Changes game state to LOADING
 void GameLoadInit(){
     gameStateInstance = LOADING;
 }
 
+// Resets variable values, sets game state to INTRO and bonus state to OUTOFPLAY
 void GameIntroInit(){
 
     gameStateInstance = INTRO; // Want to set this here so that during the game_update() function it will show menu for play mode, e.g. 2player or 1 player vs AI, before play begins
@@ -337,12 +349,15 @@ void GameIntroInit(){
     winningScore = 5;
 }
 
-//This function can be used to initialize game variables at boot-up
-//Most variables are  declared into general_settings.h
+/* Set variable initial values,
+ * Set initial racket positions and directions
+ * Set bonus-related initial values
+ * Clear inputupdate and lcdupdate pending vars
+ * Change game state to STARTING
+ */
 void GameStartInit()
 {
      InputUpdatePending = 0;
-     GameUpdatePending = 0;
      LCDUpdatePending = 0;
 
      // draw top wall
@@ -396,5 +411,4 @@ void GameStartInit()
 
      //Initial state of the ball
      gameStateInstance = STARTING;
-
 }

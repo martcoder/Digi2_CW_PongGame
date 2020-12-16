@@ -8,27 +8,26 @@
 //  M. MATA
 //  GCU
 //  November 2017
+//
+//  Additional features added by mk December 2020
 //******************************************************************************	
 
 #include "pong_auxiliary.h"
 
 /* 5xx functions / variables */ 
 volatile unsigned int LCD_intervals = 0; //count number of base intervals elapsed
-//volatile unsigned int Game_intervals = 0; //count number of base intervals elapsed
 //volatile =  compiler will not optimize these variables
-
 
 //main function
 void main(void)
 {
-  volatile unsigned long  batt_voltage; 
   
   WDTCTL = WDTPW+WDTHOLD; // Stop WDT
   
   // Initialize board
   halBoardInit();  
 
-  /* Initialize TimerA1, it times ball and LCD updates */
+  /* Initialize TimerA1, it times LCD updates */
   TimerA1Init();
 
   //Initialize LCD and backlight
@@ -42,7 +41,6 @@ void main(void)
 
   // Set game state to starting up
   GameLoadInit();
-
 
   while(1) //infinite main loop
   {
@@ -63,23 +61,23 @@ void main(void)
      * again next time round
      */
 
-    if(LCDUpdatePending)
+    if(LCDUpdatePending) // If TimerA has timed out 9 times
     {
-        if(InputUpdatePending || ContinuousPressChecker)
+        if(InputUpdatePending || ContinuousPressChecker) // If user input has been pressed this time, or last time
         {
             InputUpdatePending=0; // clear var
             ContinuousPressChecker = 0; // clear var
             UserInputs_update(); // update positions if inputs are currently pressed, also set ContinuousPressChecker if they are
         }
 
-        if(AI_enabled == 1){
-            ai_movement(); // update positions if inputs are currently pressed, also set ContinuousPressChecker if they are
+        if(AI_enabled == 1){ // If vs AI was chosen at start of the game
+            ai_movement(); // update positions for AI
         }
 
-        game_update();
+        game_update(); // Based on the current game state perform game operations
 
-        LCDUpdatePending=0;
-        LCD_update();
+        LCDUpdatePending=0; // Clear var
+        LCD_update(); // Undraw old object positions, draw new object positions
     }
 
   }   	  
@@ -95,8 +93,8 @@ __interrupt void TIMER1_A0_ISR(void)
  //interrupt flag CCIFG is automatically cleared when servicing this ISR
   if(!LCDUpdatePending) //if update still pending, skip this interval
  {
-   LCD_intervals++;
-   if(LCD_intervals>=(LCD_INTERVAL_mS/TIMING_BASE_mS)) //8 is time to run the LCD update
+   LCD_intervals++; // incrementer
+   if(LCD_intervals>=(LCD_INTERVAL_mS/TIMING_BASE_mS)) //8 is value being checked against
    {
       LCDUpdatePending = 1; //warn the CPU that LCD update is required
       LCD_intervals = 0;
@@ -147,7 +145,7 @@ __interrupt void my_Port2_ISR(void)
         // Change game state to starting
         GameStartInit();
 
-        InputUpdatePending  = 0;
+        InputUpdatePending  = 0; // clear var
     }
 
     if(gameStateInstance == WINNING){
@@ -161,7 +159,7 @@ __interrupt void my_Port2_ISR(void)
             // Change game state to starting
             GameStartInit();
 
-            // Reset scores and show Intro Menu
+            // Reset vars such as scores and show Intro Menu
             GameIntroInit();
 
         }
@@ -177,7 +175,7 @@ __interrupt void my_Port2_ISR(void)
                 // Clear LCD
                 LCDInit();
 
-                // Initialise and start game intro
+                // Reset vars such as scores and show Intro Menu
                 GameIntroInit();
 
             }

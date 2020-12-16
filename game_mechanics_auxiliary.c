@@ -1,6 +1,10 @@
 
 #include "game_mechanics_auxiliary.h"
 
+/*
+ * Causes the ball displacement to change depending on the which racket zone hit for a stationary racket
+ * or depending on which direction the racket is moving for a moving racket
+ * */
 void racket_movement_effect(int player){
     if(player == 1){
         if(yR1_old == yR1){ // racket not moving
@@ -50,6 +54,7 @@ void racket_movement_effect(int player){
     }
 }
 
+// Undraw projectiles old positions
 void clearProjectiles(){
 
     // Clear old projectiles
@@ -61,11 +66,15 @@ void clearProjectiles(){
     halLcdHLine(p1ProjectileB_X_old2 -PROJECTILE_HALF_SIZE, p1ProjectileB_X_old2 + PROJECTILE_HALF_SIZE, p1ProjectileB_Y_old2, PIXEL_OFF);
 }
 
+/*
+ * Puts projectiles off-screen in terms of x position
+ * Sets the projectile y position which corresponds with a racket2 cannon y position
+ * */
 void resetProjectiles(){
 
     // Set projectile A position off screen for now so as to not interfere with the ball
     p1ProjectileA_X = xR1-10;
-    p1ProjectileA_Y = yR1 - HALF_RACKET_SIZE;
+    p1ProjectileA_Y = yR1 - HALF_RACKET_SIZE; // Update the y-position to be at a racket2 cannon
 
     // Update previous/old for projectile A
     p1ProjectileA_X_old = p1ProjectileA_X;
@@ -76,7 +85,7 @@ void resetProjectiles(){
 
     // Set projectile B position off screen for now so as to not interfere with the ball
     p1ProjectileB_X = xR1-10;
-    p1ProjectileB_Y = yR1 + HALF_RACKET_SIZE;
+    p1ProjectileB_Y = yR1 + HALF_RACKET_SIZE; // Update the y-position to be at a racket2 cannon
 
     // Update previous/old for projectile B
     p1ProjectileB_X_old = p1ProjectileB_X;
@@ -94,6 +103,8 @@ void powerUpProjectiles(){
     p1ProjectileB_X = xR1+10;
 }
 
+// Prevent ball from passing through ceiling
+// also return value to indicate whether ceiling reached by ball
 int top_wall_reached()
 {
     if(yBall <= (BALL_RADIUS+12) ) //top wall reached
@@ -104,6 +115,8 @@ int top_wall_reached()
     else return 0;
 }
 
+// Prevent ball from passing through floor
+// also return value to indicate whether floor reached by ball
 int bottom_wall_reached()
 {
     if(yBall >= (LCD_ROW-BALL_RADIUS)) //up wall reached
@@ -114,6 +127,7 @@ int bottom_wall_reached()
     else return 0;
 }
 
+// Return value to indicate whether right wall reached
 int right_wall_reached()
 {
     if(xBall >= LCD_COL-1-BALL_RADIUS) //right wall reached
@@ -124,16 +138,18 @@ int right_wall_reached()
     else return 0; //right wall not reached
 }
 
+// Return value to indicate whether left wall reached
 int left_wall_reached()
 {
     if(xBall <= BALL_RADIUS)  //left wall reached
     {
-        xBall <= BALL_RADIUS; //do not overwrite wall/racket1
+        //xBall = BALL_RADIUS; //do not overwrite wall/racket1
         return 1;
     }
     else return 0; //right wall not reached
 }
 
+// Return value to indicate whether Player1 racket hit by ball
 int P1_racket_hit() //check ball vs left racket
 {
  if( (yBall <= (yR1 + HALF_RACKET_SIZE)) && (yBall >= (yR1 - HALF_RACKET_SIZE)) && (xBall <= BALL_RADIUS+4) )
@@ -142,6 +158,7 @@ int P1_racket_hit() //check ball vs left racket
      return 0;
 }
 
+// Return value to indicate whether Player1 racket centre hit by ball
 int P1_racket_centre_hit() //check ball vs left racket centre
 {
  if( (yBall <= (yR1 + QUARTER_RACKET_SIZE)) && (yBall >= (yR1 - QUARTER_RACKET_SIZE)) && (xBall <= BALL_RADIUS+4) )
@@ -149,6 +166,7 @@ int P1_racket_centre_hit() //check ball vs left racket centre
  else
      return 0;
 }
+// Return value to indicate whether Player1 racket upper hit by ball
 int P1_racket_upper_hit() //check ball vs left racket upper
 {
  if( (yBall < (yR1 - QUARTER_RACKET_SIZE)) && (yBall >= (yR1 - HALF_RACKET_SIZE)) && (xBall <= BALL_RADIUS+4) )
@@ -156,6 +174,7 @@ int P1_racket_upper_hit() //check ball vs left racket upper
  else
      return 0;
 }
+// Return value to indicate whether Player1 racket lower hit by ball
 int P1_racket_lower_hit() //check ball vs left racket lower
 {
  if( (yBall > (yR1 + QUARTER_RACKET_SIZE)) && (yBall <= (yR1 + HALF_RACKET_SIZE)) && (xBall <= BALL_RADIUS+4) )
@@ -164,6 +183,10 @@ int P1_racket_lower_hit() //check ball vs left racket lower
      return 0;
 }
 
+/*
+ * Return value to indicate whether Player2 bonus racket hit by ball,
+*also adjust ball displacement depending on bonus racket movement
+ */
 int P2_bonus_racket_hit() //check ball vs player2 bonus racket
 {
  if( (yBall <= (yR2bonus + QUARTER_RACKET_SIZE)) && (yBall >= (yR2bonus - QUARTER_RACKET_SIZE)) && (xBall >= (xR2bonus - BALL_RADIUS - 5)) ){
@@ -177,7 +200,7 @@ int P2_bonus_racket_hit() //check ball vs player2 bonus racket
  else
      return 0;
 }
-
+// Return value to indicate whether Player2 racket hit by ball
 int P2_racket_hit() //check ball vs right racket
 {
  if( (yBall <= (yR2 + HALF_RACKET_SIZE)) && (yBall >= (yR2 - HALF_RACKET_SIZE)) && (xBall >= (LCD_COL - BALL_RADIUS - 4)) )
@@ -185,7 +208,7 @@ int P2_racket_hit() //check ball vs right racket
  else
      return 0;
 }
-
+// Return value to indicate whether Player2 racket centre hit by ball
 int P2_racket_centre_hit() //check ball vs left racket centre
 {
  if( (yBall <= (yR2 + QUARTER_RACKET_SIZE)) && (yBall >= (yR2 - QUARTER_RACKET_SIZE)) && (xBall >= BALL_RADIUS-4) )
@@ -193,6 +216,7 @@ int P2_racket_centre_hit() //check ball vs left racket centre
  else
      return 0;
 }
+// Return value to indicate whether Player2 racket upper hit by ball
 int P2_racket_upper_hit() //check ball vs left racket upper
 {
  if( (yBall < (yR2 - QUARTER_RACKET_SIZE)) && (yBall >= (yR2 - HALF_RACKET_SIZE)) && (xBall >= BALL_RADIUS-4) )
@@ -200,6 +224,7 @@ int P2_racket_upper_hit() //check ball vs left racket upper
  else
      return 0;
 }
+// Return value to indicate whether Player2 racket lower hit by ball
 int P2_racket_lower_hit() //check ball vs left racket lower
 {
  if( (yBall > (yR2 + QUARTER_RACKET_SIZE)) && (yBall <= (yR2 + HALF_RACKET_SIZE)) && (xBall >= BALL_RADIUS-4) )
@@ -208,7 +233,7 @@ int P2_racket_lower_hit() //check ball vs left racket lower
      return 0;
 }
 
-
+// updates the top banner string which holds e.g. "B P1:X vs P2:X B"
 void updateBannerString(volatile char* bannerString,int p1score, int p2score, int p1bonusEnabled, int p2bonusEnabled){
 
     if(p1bonusEnabled == 1)
