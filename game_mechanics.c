@@ -67,9 +67,6 @@ void game_update(void)
      break;
  } // end of switch gameStateInstance
 
-    // Bit-set (LPM3_bits + GIE) in SR register to enter LPM3 mode
-    __bis_SR_register(LPM3_bits + GIE);
-    __no_operation(); //for debug
 }// end of game_update
 
 
@@ -176,10 +173,6 @@ void game_load(void){
                //stop TimerA1. This prevents new LCD and ball updates
                //but user input is operational as Port2 interrupts can still be triggered
                TA1CTL= TA1CTL & ~(BIT5 + BIT4); //MC=00 (bits 5,4) 0b11001111
-               // Now send CPU to sleep and wait for user to proceed
-               // Bit-set (LPM3_bits + GIE) in SR register to enter LPM3 mode
-               __bis_SR_register(LPM3_bits + GIE);
-               __no_operation(); //for debug
 }
 
 void game_intro(void){
@@ -198,12 +191,6 @@ void game_intro(void){
           //stop TimerA1. This prevents new LCD and ball updates
           //but user input is operational as Port2 interrupts can still be triggered
           TA1CTL= TA1CTL & ~(BIT5 + BIT4); //MC=00 (bits 5,4) 0b11001111
-
-          // Now send CPU to sleep and wait for user to decide play mode
-          // Bit-set (LPM3_bits + GIE) in SR register to enter LPM3 mode
-          __bis_SR_register(LPM3_bits + GIE);
-          __no_operation(); //for debug
-
 }
 
 void game_start(void){

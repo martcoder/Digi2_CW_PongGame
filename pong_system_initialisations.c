@@ -30,7 +30,7 @@ void halBoardInit(void)
   P5REN |= 0x80;
 
   // LED outputs
-  P1DIR = P1DIR | (BIT0 + BIT1);
+  //P1DIR = P1DIR | (BIT0 + BIT1);
 
   //Now configure SW1 (P2.6) and SW2 (P2.7) as inputs for Player2 with pull-down (example)
   P2DIR &= ~(BIT6+BIT7); //pin 6 input
